@@ -1,0 +1,48 @@
+# Dependencies
+node_modules
+
+# Build outputs
+dist
+build
+coverage
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Cache
+.cache
+.eslintcache
+.prettercache
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Lock files
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# MongoDB data
+data
+
+# Docker
+Dockerfile
+docker-compose*.yml
+
+# Config files
+*.config.js
+*.config.ts
+.eslintrc.js
+
+# Generated files
+*.d.ts
+
+# IDE
+.vscode
+.idea

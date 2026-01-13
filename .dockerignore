@@ -1,0 +1,90 @@
+# Dependencies
+node_modules
+npm-debug.log
+yarn-error.log
+
+# Build outputs
+dist
+build
+coverage
+
+# Development files
+.git
+.gitignore
+.gitattributes
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# Environment files
+.env
+.env.local
+.env.*.local
+.env.development
+.env.test
+.env.production
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# Testing
+coverage
+.nyc_output
+
+# Cache directories
+.npm
+.cache
+.eslintcache
+.prettercache
+
+# Documentation
+README.md
+CHANGELOG.md
+LICENSE
+docs
+
+# Docker files
+Dockerfile*
+docker-compose*.yml
+.dockerignore
+
+# CI/CD
+.github
+.gitlab-ci.yml
+.travis.yml
+.circleci
+
+# Lock files (optional - include if using package-lock.json)
+# package-lock.json
+
+# MongoDB data
+data
+mongo-data
+
+# Husky
+.husky
+
+# TypeScript
+tsconfig*.json
+*.tsbuildinfo
+
+# Source maps
+*.map
+
+# Temporary files
+tmp
+temp
+*.tmp
+
+# OS files
+.DS_Store
+Thumbs.db

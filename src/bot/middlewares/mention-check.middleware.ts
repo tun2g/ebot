@@ -1,0 +1,65 @@
+import logger from '../../shared/logger/logger';
+import { BotContext } from '../interface/context';
+
+/**
+ * Middleware to check if bot is mentioned in channels/groups
+ * Only allows messages in private chats or when bot is mentioned in groups/channels
+ */
+export const mentionCheckMiddleware = async (ctx: BotContext, next) => {
+  // Get chat type
+  const chatType = ctx.chat?.type;
+
+  // Allow all messages in private chats
+  if (chatType === 'private') {
+    return next();
+  }
+
+  // For groups, supergroups, and channels - check if bot is mentioned
+  if (chatType === 'group' || chatType === 'supergroup' || chatType === 'channel') {
+    const botUsername = ctx.botInfo?.username;
+
+    if (!botUsername) {
+      logger.warn('Bot username not available');
+      return next();
+    }
+
+    // Check if message exists
+    if (!ctx.message || !('text' in ctx.message)) {
+      return; // Ignore non-text messages in channels/groups
+    }
+
+    const messageText = ctx.message.text || '';
+    const mentionPattern = `@${botUsername}`;
+
+    // Check if bot is mentioned in the message
+    if (messageText.includes(mentionPattern)) {
+      logger.info(`Bot mentioned in ${chatType} by user ${ctx.from?.id}`);
+      return next();
+    }
+
+    // Check if bot is mentioned in entities (for mentions)
+    const entities = ctx.message.entities || [];
+    const isMentioned = entities.some((entity) => {
+      if (entity.type === 'mention') {
+        const mention = messageText.substring(entity.offset, entity.offset + entity.length);
+        return mention === mentionPattern;
+      }
+      if (entity.type === 'text_mention') {
+        return entity.user?.username === botUsername;
+      }
+      return false;
+    });
+
+    if (isMentioned) {
+      logger.info(`Bot mentioned (via entity) in ${chatType} by user ${ctx.from?.id}`);
+      return next();
+    }
+
+    // Bot not mentioned - ignore message
+    logger.debug(`Bot not mentioned in ${chatType}, ignoring message from user ${ctx.from?.id}`);
+    return;
+  }
+
+  // For unknown chat types, allow the message
+  return next();
+};
