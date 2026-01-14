@@ -121,9 +121,7 @@ This is a Telegram Bot Template built with:
 
 Use this as a starting point for your own bot\\!`;
 
-    const keyboard = Markup.inlineKeyboard([
-      [Markup.button.callback('⬅️ Back', `${MainMenu.name}BackToMain`)],
-    ]);
+    const keyboard = Markup.inlineKeyboard([[Markup.button.callback('⬅️ Back', `${MainMenu.name}BackToMain`)]]);
 
     await ctx.editMessageText(message, {
       parse_mode: 'MarkdownV2',
@@ -150,9 +148,7 @@ Use this as a starting point for your own bot\\!`;
 *Need More Help?*
 Check the documentation or contact support\\.`;
 
-    const keyboard = Markup.inlineKeyboard([
-      [Markup.button.callback('⬅️ Back', `${MainMenu.name}BackToMain`)],
-    ]);
+    const keyboard = Markup.inlineKeyboard([[Markup.button.callback('⬅️ Back', `${MainMenu.name}BackToMain`)]]);
 
     await ctx.editMessageText(message, {
       parse_mode: 'MarkdownV2',

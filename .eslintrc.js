@@ -42,10 +42,12 @@ module.exports = {
     'prettier/prettier': [
       'error',
       {
+        singleQuote: true,
+        trailingComma: 'es5',
         endOfLine: 'auto',
+        printWidth: 120,
       },
     ],
-
     // TypeScript specific
     '@typescript-eslint/interface-name-prefix': 'off',
     '@typescript-eslint/explicit-function-return-type': 'off',

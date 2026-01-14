@@ -1,8 +1,6 @@
 import * as winston from 'winston';
 
-const customFormat = winston.format.printf(
-  ({ level, message, timestamp }) => `${timestamp} ${level}: ${message}`,
-);
+const customFormat = winston.format.printf(({ level, message, timestamp }) => `${timestamp} ${level}: ${message}`);
 
 const logger = winston.createLogger({
   level: 'info',
@@ -10,7 +8,7 @@ const logger = winston.createLogger({
     winston.format.timestamp(),
     winston.format.colorize(),
     winston.format.errors(),
-    customFormat,
+    customFormat
   ),
   transports: [new winston.transports.Console()],
 });

@@ -4,9 +4,14 @@ import { configService } from '../configs/configuration';
 import logger from '../shared/logger/logger';
 import { botMessageHandler } from './bot-message-handler';
 import { helpCommand } from './commands/help/help.command';
+import { learningCommand } from './commands/learning/learning.command';
 import { menuCommand } from './commands/menu/menu.command';
 import { startCommand } from './commands/start/start.command';
+import { statsCommand } from './commands/stats/stats.command';
+import { topicCommand } from './commands/topic/topic.command';
 import { BotContext } from './interface/context';
+import { learningMenuActionHandler } from './menus/learning/learning.action-handler';
+import { learningMenuHandler } from './menus/learning/learning.handler';
 import { mainMenuActionHandler } from './menus/main/main.action-handler';
 import { mainMenuHandler } from './menus/main/main.handler';
 import { authMiddleware } from './middlewares/auth.middleware';
@@ -22,10 +27,10 @@ bot.start(async (ctx) => {
   await startCommand.onStart(ctx);
 });
 
-const publicCommands: Map<string, (ctx: BotContext) => void> = new Map<
-  string,
-  (ctx: BotContext) => void
->([...startCommand.register(), ...helpCommand.register()]);
+const publicCommands: Map<string, (ctx: BotContext) => void> = new Map<string, (ctx: BotContext) => void>([
+  ...startCommand.register(),
+  ...helpCommand.register(),
+]);
 
 Array.from(publicCommands).forEach(([command, callback]) => {
   bot.command(command, callback);
@@ -34,10 +39,12 @@ Array.from(publicCommands).forEach(([command, callback]) => {
 // NOTE: all actions and commands following this middleware require authentication
 bot.use(authMiddleware);
 
-const privateCommands: Map<string, (ctx: BotContext) => void> = new Map<
-  string,
-  (ctx: BotContext) => void
->([...menuCommand.register()]);
+const privateCommands: Map<string, (ctx: BotContext) => void> = new Map<string, (ctx: BotContext) => void>([
+  ...menuCommand.register(),
+  ...learningCommand.register(),
+  ...topicCommand.register(),
+  ...statsCommand.register(),
+]);
 
 Array.from(privateCommands).forEach(([command, callback]) => {
   bot.command(command, callback);
@@ -51,6 +58,8 @@ bot.on('message', async (ctx: BotContext) => {
 const actionHandlers = new Map<string | RegExp, (ctx: BotContext) => void>([
   ...mainMenuHandler.register(),
   ...mainMenuActionHandler.register(),
+  ...learningMenuHandler.register(),
+  ...learningMenuActionHandler.register(),
 ]);
 
 // Register all actions (both string and regex patterns)

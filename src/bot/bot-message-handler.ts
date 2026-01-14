@@ -1,5 +1,7 @@
 import { sessionService } from '../shared/services/session.service';
 import { CurrentAction } from './constants/current-action';
+import { topicSelectionHandler } from './handlers/topic-selection.handler';
+import { vocabularyResponseHandler } from './handlers/vocabulary-response.handler';
 import { BotContext } from './interface/context';
 
 /**
@@ -19,6 +21,17 @@ export class BotMessageHandler {
   }
 
   async process(ctx: BotContext) {
+    // Check if this is a reply to a bot message (for topic selection or vocabulary response)
+    if (ctx.message && 'reply_to_message' in ctx.message && ctx.message.reply_to_message) {
+      // Try topic selection handler first
+      const topicHandled = await topicSelectionHandler.handle(ctx);
+      if (topicHandled) return;
+
+      // Try vocabulary response handler
+      const vocabHandled = await vocabularyResponseHandler.handle(ctx);
+      if (vocabHandled) return;
+    }
+
     const session = await sessionService.getSession(ctx);
     const message =
       'message' in ctx.update && ctx.update.message && 'text' in ctx.update.message
@@ -42,7 +55,7 @@ export class BotMessageHandler {
     await ctx.reply(
       `You said: "${message}"\n\n` +
         `This is the message handler. You can add custom logic here to process user messages.\n\n` +
-        `Try using /menu to see the interactive menu!`,
+        `Try using /menu to see the interactive menu!`
     );
   }
 }

@@ -22,6 +22,18 @@ export class SetUpBotCommand {
         command: 'help',
         description: 'Show help information and available commands',
       },
+      {
+        command: 'learning',
+        description: 'Open the English learning menu',
+      },
+      {
+        command: 'topic',
+        description: 'Show current week topic',
+      },
+      {
+        command: 'stats',
+        description: 'Show your learning statistics',
+      },
     ];
   }
 

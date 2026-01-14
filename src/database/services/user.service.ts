@@ -36,7 +36,7 @@ export class UserService {
           upsert: true,
           new: true,
           runValidators: true,
-        },
+        }
       );
 
       return user;
@@ -63,11 +63,7 @@ export class UserService {
    */
   async updateUser(telegramUserId: number, updateData: Partial<IUser>): Promise<IUser | null> {
     try {
-      return await User.findOneAndUpdate(
-        { telegramUserId },
-        { $set: updateData },
-        { new: true, runValidators: true },
-      );
+      return await User.findOneAndUpdate({ telegramUserId }, { $set: updateData }, { new: true, runValidators: true });
     } catch (error) {
       logger.error(`Error updating user ${telegramUserId}: ${error}`);
       return null;

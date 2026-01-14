@@ -1,6 +1,7 @@
 import { bot } from './bot';
 import { setUpBotCommand } from './bot/commands/setup';
 import { BOT_DESCRIPTION } from './bot/constants/bot-description';
+import { initializeJobs } from './bot/jobs';
 import { mongodbConnection } from './database';
 import logger from './shared/logger/logger';
 
@@ -32,6 +33,9 @@ const bootstrap = async () => {
   if (res) {
     logger.info("😎 Set bot'description successfully");
   }
+
+  // Initialize cron jobs for English learning feature
+  await initializeJobs();
 
   await bot.launch(() => {
     logger.info(`🚀 Bot @${botInfo.username} is now running!`);

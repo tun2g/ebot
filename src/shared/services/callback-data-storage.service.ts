@@ -15,7 +15,7 @@ export class CallbackDataStorageService {
     await Promise.all(
       data.map(async (value) => {
         await redisService.hSet(redisKey, value[field], JSON.stringify(value));
-      }),
+      })
     );
     await redisService.expire(redisKey, 3600);
   }
@@ -24,9 +24,7 @@ export class CallbackDataStorageService {
     const redisKey = `${prefix}:${address}`;
     const redisValue = await redisService.hGet(redisKey, field);
     if (!redisValue) {
-      await ctx.editMessageText(
-        `🤕Something went wrong. Please ${Command.START} again to get started.`,
-      );
+      await ctx.editMessageText(`🤕Something went wrong. Please ${Command.START} again to get started.`);
       throw new Error('CallbackData is expired!');
     }
     return JSON.parse(redisValue) as T;
@@ -41,9 +39,7 @@ export class CallbackDataStorageService {
     const redisKey = `${key}:${address}`;
     const redisValue = await redisService.get(redisKey);
     if (!redisValue) {
-      await ctx.editMessageText(
-        `🤕Something went wrong. Please ${Command.START} again to get started.`,
-      );
+      await ctx.editMessageText(`🤕Something went wrong. Please ${Command.START} again to get started.`);
       throw new Error('CallbackData is expired!');
     }
     return JSON.parse(redisValue) as T;

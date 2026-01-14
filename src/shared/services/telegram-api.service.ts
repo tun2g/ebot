@@ -19,7 +19,7 @@ export class TelegramApiService {
     chatId: number,
     text: string,
     markup: InlineKeyboardMarkup,
-    parseMode: 'Markdown' | 'html' = 'Markdown',
+    parseMode: 'Markdown' | 'html' = 'Markdown'
   ) {
     try {
       const response = await axios.post(`${this.botApiUrl}/sendMessage`, {
@@ -49,12 +49,7 @@ export class TelegramApiService {
     }
   }
 
-  async editMessageText(
-    chatId: number,
-    messageId: number,
-    text: string,
-    markup: InlineKeyboardMarkup,
-  ) {
+  async editMessageText(chatId: number, messageId: number, text: string, markup: InlineKeyboardMarkup) {
     await axios.post(`${this.botApiUrl}/editMessageText`, {
       message_id: messageId,
       chat_id: chatId,

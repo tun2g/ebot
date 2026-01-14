@@ -123,8 +123,7 @@ Select an option:`;
     await ctx.answerCbQuery();
 
     // Extract page number from callback data
-    const callbackData =
-      ctx.callbackQuery && 'data' in ctx.callbackQuery ? ctx.callbackQuery.data : '';
+    const callbackData = ctx.callbackQuery && 'data' in ctx.callbackQuery ? ctx.callbackQuery.data : '';
     const match = callbackData?.match(/^pagination_(\d+)$/);
     const page = match ? parseInt(match[1], 10) : 1;
 

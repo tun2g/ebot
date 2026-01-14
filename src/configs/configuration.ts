@@ -16,6 +16,11 @@ class ConfigService {
       uri: process.env.MONGODB_URI!,
     },
   };
+  ai = {
+    provider: process.env.AI_PROVIDER || 'gemini',
+    apiKey: process.env.AI_API_KEY || '',
+  };
+  timezone = process.env.TIMEZONE || 'Asia/Ho_Chi_Minh'; // UTC+7
 }
 
 export const configService = new ConfigService();

@@ -23,6 +23,13 @@ export const mentionCheckMiddleware = async (ctx: BotContext, next) => {
       return next();
     }
 
+    // Allow replies to bot's messages (for vocabulary responses and topic selection)
+    if (ctx.message && 'reply_to_message' in ctx.message && ctx.message.reply_to_message) {
+      if (ctx.message.reply_to_message.from?.username === botUsername) {
+        return next();
+      }
+    }
+
     // Check if message exists
     if (!ctx.message || !('text' in ctx.message)) {
       return; // Ignore non-text messages in channels/groups

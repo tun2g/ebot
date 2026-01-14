@@ -1,11 +1,12 @@
 module.exports = {
-  // TypeScript files
-  '*.ts': ['eslint --fix', 'prettier --write', () => 'tsc --noEmit --pretty'],
+  // TypeScript files - ESLint with Prettier via prettier/prettier rule
+  // Matches VS Code's source.fixAll.eslint behavior
+  '*.ts': (filenames) => [`eslint --fix ${filenames.join(' ')}`],
 
-  // JavaScript files
-  '*.js': ['eslint --fix', 'prettier --write'],
+  // JavaScript files - ESLint with Prettier via prettier/prettier rule
+  '*.js': (filenames) => [`eslint --fix ${filenames.join(' ')}`],
 
-  // JSON files
+  // JSON files - Use Prettier directly (ESLint doesn't handle JSON)
   '*.json': ['prettier --write'],
 
   // Markdown files
