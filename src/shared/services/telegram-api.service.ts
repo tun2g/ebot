@@ -1,8 +1,7 @@
 import axios from 'axios';
+import { configService } from 'src/configs/configuration';
+import logger from 'src/shared/logger/logger';
 import { InlineKeyboardMarkup, Message } from 'telegraf/types';
-
-import { configService } from '../../configs/configuration';
-import logger from '../logger/logger';
 
 export class TelegramApiService {
   private botToken: string;

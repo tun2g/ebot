@@ -1,6 +1,6 @@
-import { BotContext } from '../../bot/interface/context';
-import logger from '../../shared/logger/logger';
-import { IUser, User } from '../models/user.model';
+import { BotContext } from 'src/bot/interface/context';
+import { IUser, User } from 'src/database/models/user.model';
+import logger from 'src/shared/logger/logger';
 
 export class UserService {
   /**
@@ -80,6 +80,28 @@ export class UserService {
       logger.error(`Error getting user count: ${error}`);
       return 0;
     }
+  }
+
+  /**
+   * Find multiple users by their Telegram IDs
+   */
+  async findUsersByTelegramIds(telegramUserIds: number[]): Promise<IUser[]> {
+    try {
+      return await User.find({ telegramUserId: { $in: telegramUserIds } });
+    } catch (error) {
+      logger.error(`Error finding users by IDs: ${error}`);
+      return [];
+    }
+  }
+
+  /**
+   * Get display name for a user (username or firstName, or fallback to ID)
+   */
+  getDisplayName(user: IUser | null, userId?: number): string {
+    if (!user) {
+      return userId ? `User ${userId}` : 'Unknown User';
+    }
+    return user.username ? `@${user.username}` : user.firstName || `User ${user.telegramUserId}`;
   }
 }
 

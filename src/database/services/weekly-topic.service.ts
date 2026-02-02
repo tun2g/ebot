@@ -1,7 +1,6 @@
 import mongoose from 'mongoose';
-
-import logger from '../../shared/logger/logger';
-import { IWeeklyTopic, WeeklyTopic, WeeklyTopicStatus } from '../models/weekly-topic.model';
+import { IWeeklyTopic, WeeklyTopic, WeeklyTopicStatus } from 'src/database/models/weekly-topic.model';
+import logger from 'src/shared/logger/logger';
 
 export class WeeklyTopicService {
   /**

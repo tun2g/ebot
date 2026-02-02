@@ -1,3 +1,3 @@
-export { mongodbConnection } from './connection';
-export { IUser, User } from './models/user.model';
-export { userService } from './services/user.service';
+export { mongodbConnection } from 'src/database/connection';
+export { IUser, User } from 'src/database/models/user.model';
+export { userService } from 'src/database/services/user.service';

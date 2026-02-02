@@ -1,11 +1,25 @@
-import { AIProvider } from './ai.interface';
-import { GeminiProvider } from './gemini.provider';
+import { configService } from 'src/configs/configuration';
+import { AIProvider } from 'src/shared/services/ai/ai.interface';
+import { FuseProvider } from 'src/shared/services/ai/fuse.provider';
+import { GeminiProvider } from 'src/shared/services/ai/gemini.provider';
 
 class AIService {
   private provider: AIProvider;
 
   constructor() {
-    this.provider = new GeminiProvider();
+    const providerType = configService.ai.provider.toLowerCase();
+
+    switch (providerType) {
+      case 'fuse':
+        this.provider = new FuseProvider();
+        break;
+      case 'gemini':
+        this.provider = new GeminiProvider();
+        break;
+      default:
+        // Default to Gemini for backward compatibility
+        this.provider = new GeminiProvider();
+    }
   }
 
   async generateTopicSuggestions(previousTopics: string[] = [], count = 5) {

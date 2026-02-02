@@ -1,8 +1,7 @@
 import { RedisClientType, SetOptions } from 'redis';
 import * as redis from 'redis';
-
-import { configService } from '../../configs/configuration';
-import logger from '../logger/logger';
+import { configService } from 'src/configs/configuration';
+import logger from 'src/shared/logger/logger';
 
 export class RedisService {
   private instance: RedisClientType;

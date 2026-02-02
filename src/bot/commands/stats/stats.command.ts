@@ -1,8 +1,8 @@
-import { groupService } from '../../../database/services/group.service';
-import { userStatsService } from '../../../database/services/user-stats.service';
-import { weeklyTopicService } from '../../../database/services/weekly-topic.service';
-import { BotContext } from '../../interface/context';
-import { formatUserStatsMessage, MESSAGES } from '../../resources/learning-messages';
+import { BotContext } from 'src/bot/interface/context';
+import { formatUserStatsMessage, MESSAGES } from 'src/bot/resources/learning-messages';
+import { groupService } from 'src/database/services/group.service';
+import { userStatsService } from 'src/database/services/user-stats.service';
+import { weeklyTopicService } from 'src/database/services/weekly-topic.service';
 
 export class StatsCommand {
   private map: Map<string, (ctx: BotContext) => void>;
@@ -15,7 +15,7 @@ export class StatsCommand {
   }
 
   register() {
-    this.map.set(this.commands.stats, this.onStats);
+    this.map.set(this.commands.stats, this.onStats.bind(this));
     return this.map;
   }
 

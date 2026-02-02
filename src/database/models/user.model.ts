@@ -33,7 +33,7 @@ const UserSchema: Schema = new Schema(
   {
     timestamps: true, // Automatically adds createdAt and updatedAt
     collection: 'users',
-  },
+  }
 );
 
 // Create index for fast lookups

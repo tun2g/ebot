@@ -1,9 +1,9 @@
-import { bot } from './bot';
-import { setUpBotCommand } from './bot/commands/setup';
-import { BOT_DESCRIPTION } from './bot/constants/bot-description';
-import { initializeJobs } from './bot/jobs';
-import { mongodbConnection } from './database';
-import logger from './shared/logger/logger';
+import { bot } from 'src/bot';
+import { setUpBotCommand } from 'src/bot/commands/setup';
+import { BOT_DESCRIPTION } from 'src/bot/constants/bot-description';
+import { initializeJobs } from 'src/bot/jobs';
+import { mongodbConnection } from 'src/database';
+import logger from 'src/shared/logger/logger';
 
 process.on('uncaughtException', (err) => {
   console.error(err?.stack);
@@ -15,9 +15,14 @@ process.on('unhandledRejection', (reason, error) => {
 });
 
 const bootstrap = async () => {
-  // Initialize MongoDB connection
-  if (!mongodbConnection.getConnectionStatus()) {
-    logger.warn('⚠️  MongoDB not connected, but bot will continue');
+  // Initialize MongoDB connection with retry logic
+  try {
+    await mongodbConnection.ensureConnection();
+    logger.info('✅ MongoDB is ready');
+  } catch (err) {
+    logger.error(`❌ Failed to connect to MongoDB: ${err}`);
+    logger.error('❌ Bot cannot start without MongoDB. Exiting...');
+    process.exit(1);
   }
 
   // Get bot info first

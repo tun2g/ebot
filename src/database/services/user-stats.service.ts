@@ -1,7 +1,6 @@
 import mongoose from 'mongoose';
-
-import logger from '../../shared/logger/logger';
-import { IUserStats, UserStats } from '../models/user-stats.model';
+import { IUserStats, UserStats } from 'src/database/models/user-stats.model';
+import logger from 'src/shared/logger/logger';
 
 export class UserStatsService {
   /**

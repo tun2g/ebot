@@ -1,14 +1,16 @@
 import Bull from 'bull';
-
-import { groupService } from '../../database/services/group.service';
-import { vocabularyService } from '../../database/services/vocabulary.service';
-import { weeklyTopicService } from '../../database/services/weekly-topic.service';
-import logger from '../../shared/logger/logger';
-import { aiService } from '../../shared/services/ai/ai.service';
-import { bot } from '../index';
-import { formatVocabularyMessage } from '../resources/learning-messages';
+import { bot } from 'src/bot/index';
+import { formatVocabularyMessage } from 'src/bot/resources/learning-messages';
+import { groupService } from 'src/database/services/group.service';
+import { vocabularyService } from 'src/database/services/vocabulary.service';
+import { weeklyTopicService } from 'src/database/services/weekly-topic.service';
+import logger from 'src/shared/logger/logger';
+import { aiService } from 'src/shared/services/ai/ai.service';
 
 export async function dailyVocabularyJob(_job: Bull.Job) {
+  const startTime = new Date();
+  logger.info(`🚀 CRONJOB STARTED: Daily Vocabulary | ${startTime.toISOString()} (${startTime.toLocaleString()})`);
+
   try {
     logger.info('Starting daily vocabulary job');
 
@@ -76,9 +78,23 @@ export async function dailyVocabularyJob(_job: Bull.Job) {
       }
     }
 
+    const endTime = new Date();
+    const duration = endTime.getTime() - startTime.getTime();
     logger.info('Daily vocabulary job completed');
+    logger.info(
+      `✅ CRONJOB COMPLETED: Daily Vocabulary | Duration: ${duration}ms (${(duration / 1000).toFixed(
+        2
+      )}s) | ${endTime.toISOString()}`
+    );
   } catch (error) {
+    const endTime = new Date();
+    const duration = endTime.getTime() - startTime.getTime();
     logger.error(`Daily vocabulary job failed: ${error}`);
+    logger.error(
+      `❌ CRONJOB FAILED: Daily Vocabulary | Duration: ${duration}ms (${(duration / 1000).toFixed(
+        2
+      )}s) | Error: ${error}`
+    );
     throw error;
   }
 }

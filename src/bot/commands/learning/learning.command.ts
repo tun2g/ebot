@@ -1,6 +1,6 @@
-import { BotContext } from '../../interface/context';
-import { learningMenu } from '../../menus/learning/learning.menu';
-import { MESSAGES } from '../../resources/learning-messages';
+import { BotContext } from 'src/bot/interface/context';
+import { learningMenu } from 'src/bot/menus/learning/learning.menu';
+import { MESSAGES } from 'src/bot/resources/learning-messages';
 
 export class LearningCommand {
   private map: Map<string, (ctx: BotContext) => void>;
@@ -13,7 +13,7 @@ export class LearningCommand {
   }
 
   register() {
-    this.map.set(this.commands.learning, this.onLearning);
+    this.map.set(this.commands.learning, this.onLearning.bind(this));
     return this.map;
   }
 

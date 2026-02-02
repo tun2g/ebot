@@ -1,8 +1,7 @@
+import { BotContext } from 'src/bot/interface/context';
+import { MainMenu, mainMenu } from 'src/bot/menus/main/main.menu';
 import { Markup } from 'telegraf';
 import { InlineKeyboardButton } from 'telegraf/types';
-
-import { BotContext } from '../../interface/context';
-import { MainMenu, mainMenu } from './main.menu';
 
 export class MainMenuHandler {
   private actionsMap: Map<string, (ctx: BotContext) => void>;
@@ -12,11 +11,11 @@ export class MainMenuHandler {
   }
 
   register() {
-    this.actionsMap.set(`${MainMenu.name}SimpleMenu`, this.simpleMenu);
-    this.actionsMap.set(`${MainMenu.name}Pagination`, this.showPagination);
-    this.actionsMap.set(`${MainMenu.name}About`, this.about);
-    this.actionsMap.set(`${MainMenu.name}Help`, this.help);
-    this.actionsMap.set(`${MainMenu.name}BackToMain`, this.backToMain);
+    this.actionsMap.set(`${MainMenu.name}SimpleMenu`, this.simpleMenu.bind(this));
+    this.actionsMap.set(`${MainMenu.name}Pagination`, this.showPagination.bind(this));
+    this.actionsMap.set(`${MainMenu.name}About`, this.about.bind(this));
+    this.actionsMap.set(`${MainMenu.name}Help`, this.help.bind(this));
+    this.actionsMap.set(`${MainMenu.name}BackToMain`, this.backToMain.bind(this));
     return this.actionsMap;
   }
 
@@ -137,8 +136,10 @@ Use this as a starting point for your own bot\\!`;
 
 *Available Commands:*
 /start \\- Start the bot and show welcome
-/menu \\- Open main menu
 /help \\- Show this help message
+/learning \\- Open the English learning menu
+/topic \\- Show current week topic
+/stats \\- Show your learning statistics
 
 *Navigation:*
 • Use inline buttons to navigate

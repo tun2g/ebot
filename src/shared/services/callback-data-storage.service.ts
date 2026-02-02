@@ -1,6 +1,6 @@
-import { Command } from '../../bot/constants/command';
-import { BotContext } from '../../bot/interface/context';
-import { redisService } from './redis.service';
+import { Command } from 'src/bot/constants/command';
+import { BotContext } from 'src/bot/interface/context';
+import { redisService } from 'src/shared/services/redis.service';
 
 export class CallbackDataStorageService {
   /**

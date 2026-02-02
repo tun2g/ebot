@@ -1,7 +1,6 @@
 import mongoose from 'mongoose';
-
-import logger from '../../shared/logger/logger';
-import { IUserResponse, UserResponse } from '../models/user-response.model';
+import { IUserResponse, UserResponse } from 'src/database/models/user-response.model';
+import logger from 'src/shared/logger/logger';
 
 export class UserResponseService {
   /**

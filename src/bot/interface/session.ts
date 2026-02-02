@@ -1,4 +1,4 @@
-import { CurrentAction } from '../constants/current-action';
+import { CurrentAction } from 'src/bot/constants/current-action';
 
 // userId:chatId
 export interface BotSession {

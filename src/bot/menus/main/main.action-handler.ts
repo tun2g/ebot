@@ -1,8 +1,7 @@
+import { BotContext } from 'src/bot/interface/context';
+import { MainMenu } from 'src/bot/menus/main/main.menu';
 import { Markup } from 'telegraf';
 import { InlineKeyboardButton } from 'telegraf/types';
-
-import { BotContext } from '../../interface/context';
-import { MainMenu } from './main.menu';
 
 export class MainMenuActionHandler {
   private actionsMap: Map<string | RegExp, (ctx: BotContext) => void>;
@@ -13,13 +12,15 @@ export class MainMenuActionHandler {
 
   register() {
     // Simple menu actions
-    this.actionsMap.set('simpleMenuNotification', this.showNotification);
-    this.actionsMap.set('simpleMenuData', this.showData);
-    this.actionsMap.set('simpleMenuRefresh', this.refreshSimpleMenu);
+    this.actionsMap.set('simpleMenuNotification', this.showNotification.bind(this));
+    this.actionsMap.set('simpleMenuData', this.showData.bind(this));
+    this.actionsMap.set('simpleMenuRefresh', this.refreshSimpleMenu.bind(this));
+    this.actionsMap.set('simpleMenuBack', this.simpleMenuBack.bind(this));
+    this.actionsMap.set('simpleMenuAlert', this.simpleMenuAlert.bind(this));
 
     // Pagination actions (regex pattern)
-    this.actionsMap.set(/^pagination_(\d+)$/, this.handlePagination);
-    this.actionsMap.set('pagination_current', this.paginationCurrent);
+    this.actionsMap.set(/^pagination_(\d+)$/, this.handlePagination.bind(this));
+    this.actionsMap.set('pagination_current', this.paginationCurrent.bind(this));
 
     return this.actionsMap;
   }
@@ -183,6 +184,41 @@ ${pageItems.map((item) => `*${item.name}*\n_${item.description}_`).join('\n\n')}
     await ctx.editMessageText(message, {
       parse_mode: 'MarkdownV2',
       ...keyboard,
+    });
+  }
+
+  /**
+   * Navigate back to the simple menu
+   */
+  private async simpleMenuBack(ctx: BotContext) {
+    await ctx.answerCbQuery();
+
+    const message = `📋 *Simple Menu Example*
+
+This demonstrates a basic menu with inline buttons\\.
+Each button triggers a different action\\.
+
+Select an option:`;
+
+    const keyboard = Markup.inlineKeyboard([
+      [Markup.button.callback('🔔 Show Notification', 'simpleMenuNotification')],
+      [Markup.button.callback('📊 Show Data', 'simpleMenuData')],
+      [Markup.button.callback('🔄 Refresh', 'simpleMenuRefresh')],
+      [Markup.button.callback('⬅️ Back', `${MainMenu.name}BackToMain`)],
+    ]);
+
+    await ctx.editMessageText(message, {
+      parse_mode: 'MarkdownV2',
+      ...keyboard,
+    });
+  }
+
+  /**
+   * Show an alert notification to the user
+   */
+  private async simpleMenuAlert(ctx: BotContext) {
+    await ctx.answerCbQuery('⚠️ This is an ALERT notification! It shows as a popup.', {
+      show_alert: true,
     });
   }
 }

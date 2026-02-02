@@ -1,20 +1,20 @@
-import { sessionService } from '../shared/services/session.service';
-import { CurrentAction } from './constants/current-action';
-import { topicSelectionHandler } from './handlers/topic-selection.handler';
-import { vocabularyResponseHandler } from './handlers/vocabulary-response.handler';
-import { BotContext } from './interface/context';
+import { CurrentAction } from 'src/bot/constants/current-action';
+import { topicSelectionHandler } from 'src/bot/handlers/topic-selection.handler';
+import { vocabularyResponseHandler } from 'src/bot/handlers/vocabulary-response.handler';
+import { BotContext } from 'src/bot/interface/context';
+import { sessionService } from 'src/shared/services/session.service';
 
 /**
  * Message handler for processing text messages
  * This is where you handle user messages that are not commands
  */
 export class BotMessageHandler {
-  private actionsMap: Map<CurrentAction, (ctx: BotContext) => void>;
+  private actionsMap: Map<CurrentAction, (ctx: BotContext) => Promise<void>>;
 
   constructor() {
     // Register action handlers for different current actions
     // Example: when waiting for user input for a specific action
-    this.actionsMap = new Map<CurrentAction, (ctx: BotContext) => void>([
+    this.actionsMap = new Map<CurrentAction, (ctx: BotContext) => Promise<void>>([
       // Add your action handlers here
       // [CurrentAction.WAITING_FOR_INPUT, this.handleInput],
     ]);
@@ -55,7 +55,7 @@ export class BotMessageHandler {
     await ctx.reply(
       `You said: "${message}"\n\n` +
         `This is the message handler. You can add custom logic here to process user messages.\n\n` +
-        `Try using /menu to see the interactive menu!`
+        `Try using /help to see available commands!`
     );
   }
 }

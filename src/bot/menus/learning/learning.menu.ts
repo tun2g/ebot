@@ -1,6 +1,5 @@
+import { MESSAGES } from 'src/bot/resources/learning-messages';
 import { Markup } from 'telegraf';
-
-import { MESSAGES } from '../../resources/learning-messages';
 
 export class LearningMenu {
   replyMarkup(isMonday = false) {

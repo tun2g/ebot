@@ -1,7 +1,6 @@
 import mongoose from 'mongoose';
-
-import logger from '../../shared/logger/logger';
-import { IVocabulary, Vocabulary } from '../models/vocabulary.model';
+import { IVocabulary, Vocabulary } from 'src/database/models/vocabulary.model';
+import logger from 'src/shared/logger/logger';
 
 export class VocabularyService {
   /**

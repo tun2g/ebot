@@ -1,37 +1,107 @@
-import { GoogleGenerativeAI } from '@google/generative-ai';
 import { configService } from 'src/configs/configuration';
 import logger from 'src/shared/logger/logger';
 import { AIProvider, EvaluationResult, VocabularyData } from 'src/shared/services/ai/ai.interface';
 
-export class GeminiProvider implements AIProvider {
-  private genAI: GoogleGenerativeAI;
-  private model: ReturnType<GoogleGenerativeAI['getGenerativeModel']>;
+interface FuseAPIMessage {
+  role: 'user' | 'assistant';
+  content: string;
+}
+
+interface FuseAPIRequest {
+  model: string;
+  messages: FuseAPIMessage[];
+  temperature?: number;
+  max_tokens?: number;
+}
+
+interface FuseAPIResponse {
+  id: string;
+  object: string;
+  created: number;
+  model: string;
+  choices: Array<{
+    index: number;
+    message: {
+      role: string;
+      content: string;
+    };
+    finish_reason: string;
+  }>;
+  usage: {
+    completion_tokens: number;
+    total_tokens: number;
+    prompt_tokens: number;
+  };
+}
+
+export class FuseProvider implements AIProvider {
+  private apiUrl: string;
+  private apiKey: string;
+  private model = 'claude-opus-4.5';
 
   constructor() {
-    this.genAI = new GoogleGenerativeAI(configService.ai.apiKey);
-    this.model = this.genAI.getGenerativeModel({ model: 'gemini-2.0-flash-exp' });
+    this.apiUrl = configService.ai.fuseApiUrl;
+    this.apiKey = configService.ai.apiKey;
+    if (!this.apiKey) {
+      throw new Error('Fuse API key is required. Set AI_API_KEY in your environment variables.');
+    }
+  }
+
+  private async callFuseAPI(messages: FuseAPIMessage[], temperature = 0.7): Promise<string> {
+    try {
+      const requestBody: FuseAPIRequest = {
+        model: this.model,
+        messages,
+        temperature,
+      };
+
+      const response = await fetch(this.apiUrl, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${this.apiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestBody),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Fuse API error (${response.status}): ${errorText}`);
+      }
+
+      const data: FuseAPIResponse = await response.json();
+
+      if (!data.choices || data.choices.length === 0) {
+        throw new Error('No response from Fuse API');
+      }
+
+      return data.choices[0].message.content;
+    } catch (error) {
+      logger.error(`Fuse API call failed: ${error}`);
+      throw error;
+    }
   }
 
   private parseError(error: unknown): string {
     const errorStr = error instanceof Error ? error.message : String(error);
 
-    // Parse common Google AI errors - return generic messages without sensitive details
-    if (errorStr.includes('API_KEY_INVALID') || errorStr.includes('API key not valid')) {
+    // Parse common API errors - return generic messages without sensitive details
+    if (errorStr.includes('401') || errorStr.includes('Unauthorized')) {
       return 'Invalid configuration';
     }
-    if (errorStr.includes('RESOURCE_EXHAUSTED') || errorStr.includes('quota')) {
-      return 'Out of quota';
-    }
-    if (errorStr.includes('PERMISSION_DENIED')) {
-      return 'Permission denied';
-    }
-    if (errorStr.includes('RATE_LIMIT') || errorStr.includes('429')) {
+    if (errorStr.includes('429') || errorStr.includes('rate limit')) {
       return 'Rate limit exceeded';
     }
-    if (errorStr.includes('UNAVAILABLE') || errorStr.includes('503')) {
+    if (errorStr.includes('quota') || errorStr.includes('insufficient')) {
+      return 'Out of quota';
+    }
+    if (errorStr.includes('403') || errorStr.includes('Forbidden')) {
+      return 'Permission denied';
+    }
+    if (errorStr.includes('503') || errorStr.includes('unavailable')) {
       return 'Service unavailable';
     }
-    if (errorStr.includes('DEADLINE_EXCEEDED') || errorStr.includes('timeout')) {
+    if (errorStr.includes('timeout') || errorStr.includes('ETIMEDOUT')) {
       return 'Request timeout';
     }
 
@@ -59,12 +129,12 @@ Return ONLY a JSON array of ${count} topic strings. Example format:
 
 JSON:`;
 
-      const result = await this.model.generateContent(prompt);
-      const response = result.response;
-      const text = response.text();
+      const messages: FuseAPIMessage[] = [{ role: 'user', content: prompt }];
+
+      const responseText = await this.callFuseAPI(messages);
 
       // Extract JSON from response
-      const jsonMatch = text.match(/\[[\s\S]*\]/);
+      const jsonMatch = responseText.match(/\[[\s\S]*\]/);
       if (!jsonMatch) {
         logger.error('Failed to parse AI response for topic suggestions');
         throw new Error('AI service error: Failed to parse response');
@@ -110,12 +180,12 @@ Return ONLY a JSON object with this exact structure:
 
 JSON:`;
 
-      const result = await this.model.generateContent(prompt);
-      const response = result.response;
-      const text = response.text();
+      const messages: FuseAPIMessage[] = [{ role: 'user', content: prompt }];
+
+      const responseText = await this.callFuseAPI(messages);
 
       // Extract JSON from response
-      const jsonMatch = text.match(/\{[\s\S]*\}/);
+      const jsonMatch = responseText.match(/\{[\s\S]*\}/);
       if (!jsonMatch) {
         logger.error('Failed to parse AI response for vocabulary');
         throw new Error('AI service error: Failed to parse response');
@@ -160,18 +230,13 @@ Return ONLY a JSON object with this exact structure:
 
 JSON:`;
 
-      const result = await this.model.generateContent({
-        contents: [{ role: 'user', parts: [{ text: prompt }] }],
-        generationConfig: {
-          temperature: 0, // Consistent evaluation
-        },
-      });
+      const messages: FuseAPIMessage[] = [{ role: 'user', content: prompt }];
 
-      const response = result.response;
-      const text = response.text();
+      // Use temperature 0 for consistent evaluation
+      const responseText = await this.callFuseAPI(messages, 0);
 
       // Extract JSON from response
-      const jsonMatch = text.match(/\{[\s\S]*\}/);
+      const jsonMatch = responseText.match(/\{[\s\S]*\}/);
       if (!jsonMatch) {
         logger.error('Failed to parse AI response for evaluation');
         throw new Error('AI service error: Failed to parse response');

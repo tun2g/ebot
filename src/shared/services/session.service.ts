@@ -1,7 +1,7 @@
-import { BotContext } from '../../bot/interface/context';
-import { BotSession, defaultSession } from '../../bot/interface/session';
-import { getIdsInTelegramContext } from '../utils';
-import { redisService } from './redis.service';
+import { BotContext } from 'src/bot/interface/context';
+import { BotSession, defaultSession } from 'src/bot/interface/session';
+import { redisService } from 'src/shared/services/redis.service';
+import { getIdsInTelegramContext } from 'src/shared/utils';
 
 export class SessionService {
   async getSession(ctx: BotContext) {

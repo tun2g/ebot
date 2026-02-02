@@ -1,7 +1,6 @@
 import Bull, { Queue } from 'bull';
-
-import { configService } from '../../configs/configuration';
-import logger from '../logger/logger';
+import { configService } from 'src/configs/configuration';
+import logger from 'src/shared/logger/logger';
 
 class QueueService {
   private queue: Queue;

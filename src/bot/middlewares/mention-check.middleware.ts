@@ -1,16 +1,21 @@
-import logger from '../../shared/logger/logger';
-import { BotContext } from '../interface/context';
+import { BotContext } from 'src/bot/interface/context';
+import logger from 'src/shared/logger/logger';
 
 /**
  * Middleware to check if bot is mentioned in channels/groups
  * Only allows messages in private chats or when bot is mentioned in groups/channels
  */
-export const mentionCheckMiddleware = async (ctx: BotContext, next) => {
+export const mentionCheckMiddleware = async (ctx: BotContext, next: () => Promise<void>) => {
   // Get chat type
   const chatType = ctx.chat?.type;
 
   // Allow all messages in private chats
   if (chatType === 'private') {
+    return next();
+  }
+
+  // Allow callback queries (inline button clicks) in all chat types
+  if (ctx.callbackQuery) {
     return next();
   }
 

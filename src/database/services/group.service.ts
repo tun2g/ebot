@@ -1,7 +1,6 @@
 import mongoose from 'mongoose';
-
-import logger from '../../shared/logger/logger';
-import { Group, IGroup } from '../models/group.model';
+import { Group, IGroup } from 'src/database/models/group.model';
+import logger from 'src/shared/logger/logger';
 
 export class GroupService {
   /**
@@ -9,6 +8,20 @@ export class GroupService {
    */
   async findOrCreateGroup(telegramGroupId: number, groupName: string): Promise<IGroup | null> {
     try {
+      logger.info(
+        `[GroupService] BEFORE findOrCreateGroup - TelegramID: ${telegramGroupId}, GroupName: "${groupName}"`
+      );
+
+      // Check if group exists first
+      const existingGroup = await Group.findOne({ telegramGroupId });
+      if (existingGroup) {
+        logger.info(
+          `[GroupService] Group already exists - ID: ${existingGroup._id}, TelegramID: ${telegramGroupId}, Name: "${existingGroup.groupName}"`
+        );
+      } else {
+        logger.info(`[GroupService] Group not found, will create new - TelegramID: ${telegramGroupId}`);
+      }
+
       const group = await Group.findOneAndUpdate(
         { telegramGroupId },
         {
@@ -27,9 +40,25 @@ export class GroupService {
         }
       );
 
+      if (group) {
+        logger.info(
+          `[GroupService] AFTER findOrCreateGroup - SUCCESS - ID: ${group._id}, TelegramID: ${
+            group.telegramGroupId
+          }, Name: "${group.groupName}", ActiveTopicID: ${group.activeWeeklyTopicId || 'null'}`
+        );
+      } else {
+        logger.error(
+          `[GroupService] AFTER findOrCreateGroup - FAILED - Result is null for TelegramID: ${telegramGroupId}`
+        );
+      }
+
       return group;
     } catch (error) {
-      logger.error(`Error in findOrCreateGroup: ${error}`);
+      logger.error(
+        `[GroupService] ERROR in findOrCreateGroup - TelegramID: ${telegramGroupId}, GroupName: "${groupName}", Error: ${
+          error instanceof Error ? error.message : String(error)
+        }, Stack: ${error instanceof Error ? error.stack : 'N/A'}`
+      );
       return null;
     }
   }
@@ -42,13 +71,33 @@ export class GroupService {
     weeklyTopicId: mongoose.Types.ObjectId | null
   ): Promise<IGroup | null> {
     try {
-      return await Group.findByIdAndUpdate(
+      logger.info(
+        `[GroupService] BEFORE updateActiveWeeklyTopic - GroupID: ${groupId}, NewTopicID: ${weeklyTopicId || 'null'}`
+      );
+
+      const updatedGroup = await Group.findByIdAndUpdate(
         groupId,
         { $set: { activeWeeklyTopicId: weeklyTopicId } },
         { new: true, runValidators: true }
       );
+
+      if (updatedGroup) {
+        logger.info(
+          `[GroupService] AFTER updateActiveWeeklyTopic - SUCCESS - GroupID: ${updatedGroup._id}, TelegramID: ${
+            updatedGroup.telegramGroupId
+          }, ActiveTopicID: ${updatedGroup.activeWeeklyTopicId || 'null'}`
+        );
+      } else {
+        logger.error(`[GroupService] AFTER updateActiveWeeklyTopic - FAILED - Group not found with ID: ${groupId}`);
+      }
+
+      return updatedGroup;
     } catch (error) {
-      logger.error(`Error updating active weekly topic: ${error}`);
+      logger.error(
+        `[GroupService] ERROR in updateActiveWeeklyTopic - GroupID: ${groupId}, TopicID: ${weeklyTopicId}, Error: ${
+          error instanceof Error ? error.message : String(error)
+        }`
+      );
       return null;
     }
   }
@@ -70,9 +119,29 @@ export class GroupService {
    */
   async findGroupByTelegramId(telegramGroupId: number): Promise<IGroup | null> {
     try {
-      return await Group.findOne({ telegramGroupId });
+      logger.info(`[GroupService] BEFORE findGroupByTelegramId - TelegramID: ${telegramGroupId}`);
+
+      const group = await Group.findOne({ telegramGroupId });
+
+      if (group) {
+        logger.info(
+          `[GroupService] AFTER findGroupByTelegramId - FOUND - ID: ${group._id}, TelegramID: ${
+            group.telegramGroupId
+          }, Name: "${group.groupName}", ActiveTopicID: ${group.activeWeeklyTopicId || 'null'}`
+        );
+      } else {
+        logger.warn(
+          `[GroupService] AFTER findGroupByTelegramId - NOT FOUND - TelegramID: ${telegramGroupId}. This group may not be registered. Consider calling findOrCreateGroup() instead.`
+        );
+      }
+
+      return group;
     } catch (error) {
-      logger.error(`Error finding group ${telegramGroupId}: ${error}`);
+      logger.error(
+        `[GroupService] ERROR in findGroupByTelegramId - TelegramID: ${telegramGroupId}, Error: ${
+          error instanceof Error ? error.message : String(error)
+        }, Stack: ${error instanceof Error ? error.stack : 'N/A'}`
+      );
       return null;
     }
   }

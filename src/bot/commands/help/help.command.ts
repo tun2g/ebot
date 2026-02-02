@@ -1,4 +1,4 @@
-import { BotContext } from '../../interface/context';
+import { BotContext } from 'src/bot/interface/context';
 
 export class HelpCommand {
   private map: Map<string, (ctx: BotContext) => void>;
@@ -14,7 +14,7 @@ export class HelpCommand {
   }
 
   register() {
-    this.map.set(this.commands.help, this.onHelp);
+    this.map.set(this.commands.help, this.onHelp.bind(this));
     return this.map;
   }
 
@@ -27,23 +27,18 @@ export class HelpCommand {
 
 *Available Commands:*
 /start \\- Start the bot and show welcome message
-/menu \\- Open the main interactive menu
 /help \\- Show this help message
+/learning \\- Open the English learning menu
+/topic \\- Show current week topic
+/stats \\- Show your learning statistics
 
 *Features:*
 • *Commands* \\- Text commands starting with /
 • *Menus* \\- Interactive buttons for navigation
-• *Pagination* \\- Browse through lists of items
 • *Sessions* \\- Your interactions are saved
 
 *Navigation:*
 Use inline buttons to navigate through menus\\. Click "Back" buttons to return to previous screens\\.
-
-*Example Workflow:*
-1\\. Use /menu to open the main menu
-2\\. Select "Simple Menu" to see button examples
-3\\. Select "Pagination" to see list navigation
-4\\. Use "About" to learn more about the bot
 
 Need more help? Check the documentation\\!`;
 

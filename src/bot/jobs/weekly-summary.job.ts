@@ -1,16 +1,19 @@
 import Bull from 'bull';
-
-import { WeeklyTopicStatus } from '../../database/models/weekly-topic.model';
-import { groupService } from '../../database/services/group.service';
-import { userResponseService } from '../../database/services/user-response.service';
-import { userStatsService } from '../../database/services/user-stats.service';
-import { vocabularyService } from '../../database/services/vocabulary.service';
-import { weeklyTopicService } from '../../database/services/weekly-topic.service';
-import logger from '../../shared/logger/logger';
-import { bot } from '../index';
-import { formatWeeklySummaryMessage } from '../resources/learning-messages';
+import { bot } from 'src/bot/index';
+import { formatWeeklySummaryMessage } from 'src/bot/resources/learning-messages';
+import { WeeklyTopicStatus } from 'src/database/models/weekly-topic.model';
+import { groupService } from 'src/database/services/group.service';
+import { userService } from 'src/database/services/user.service';
+import { userResponseService } from 'src/database/services/user-response.service';
+import { userStatsService } from 'src/database/services/user-stats.service';
+import { vocabularyService } from 'src/database/services/vocabulary.service';
+import { weeklyTopicService } from 'src/database/services/weekly-topic.service';
+import logger from 'src/shared/logger/logger';
 
 export async function weeklySummaryJob(_job: Bull.Job) {
+  const startTime = new Date();
+  logger.info(`🚀 CRONJOB STARTED: Weekly Summary | ${startTime.toISOString()} (${startTime.toLocaleString()})`);
+
   try {
     logger.info('Starting weekly summary job');
 
@@ -44,7 +47,12 @@ export async function weeklySummaryJob(_job: Bull.Job) {
         const avgScore =
           totalResponses > 0 ? allResponses.reduce((sum, r) => sum + (r.score || 0), 0) / totalResponses : 0;
 
-        // Format weekly summary
+        // Fetch user information for top performers
+        const userIds = leaderboard.map((stats) => stats.userId);
+        const users = await userService.findUsersByTelegramIds(userIds);
+        const userMap = new Map(users.map((u) => [u.telegramUserId, u]));
+
+        // Format weekly summary with usernames
         const summaryText = formatWeeklySummaryMessage({
           topicName: activeTopic.topicName,
           startDate: activeTopic.startDate,
@@ -53,7 +61,12 @@ export async function weeklySummaryJob(_job: Bull.Job) {
           totalResponses,
           uniqueParticipants,
           avgScore,
-          topPerformers: leaderboard,
+          topPerformers: leaderboard.map((stats) => ({
+            userId: stats.userId,
+            username: userService.getDisplayName(userMap.get(stats.userId) || null, stats.userId),
+            totalScore: stats.totalScore,
+            responsesSubmitted: stats.responsesSubmitted,
+          })),
           vocabularies,
         });
 
@@ -76,9 +89,21 @@ export async function weeklySummaryJob(_job: Bull.Job) {
       }
     }
 
+    const endTime = new Date();
+    const duration = endTime.getTime() - startTime.getTime();
     logger.info('Weekly summary job completed');
+    logger.info(
+      `✅ CRONJOB COMPLETED: Weekly Summary | Duration: ${duration}ms (${(duration / 1000).toFixed(
+        2
+      )}s) | ${endTime.toISOString()}`
+    );
   } catch (error) {
+    const endTime = new Date();
+    const duration = endTime.getTime() - startTime.getTime();
     logger.error(`Weekly summary job failed: ${error}`);
+    logger.error(
+      `❌ CRONJOB FAILED: Weekly Summary | Duration: ${duration}ms (${(duration / 1000).toFixed(2)}s) | Error: ${error}`
+    );
     throw error;
   }
 }

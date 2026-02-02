@@ -74,7 +74,9 @@ mongo-data
 .husky
 
 # TypeScript
-tsconfig*.json
+# tsconfig.json is needed for Docker build
+tsconfig.build.json
+tsconfig.tsbuildinfo
 *.tsbuildinfo
 
 # Source maps

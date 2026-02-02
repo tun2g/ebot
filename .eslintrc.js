@@ -93,9 +93,8 @@ module.exports = {
       typescript: {
         alwaysTryTypes: true,
         project: './tsconfig.json',
-      },
-      node: {
-        extensions: ['.js', '.jsx', '.ts', '.tsx'],
+        tsconfigRootDir: __dirname,
+        extensions: ['.ts', '.tsx', '.js', '.jsx'],
       },
     },
   },

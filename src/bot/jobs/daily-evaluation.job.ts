@@ -1,17 +1,20 @@
 import Bull from 'bull';
-
-import { IVocabulary } from '../../database/models/vocabulary.model';
-import { groupService } from '../../database/services/group.service';
-import { userResponseService } from '../../database/services/user-response.service';
-import { userStatsService } from '../../database/services/user-stats.service';
-import { vocabularyService } from '../../database/services/vocabulary.service';
-import { weeklyTopicService } from '../../database/services/weekly-topic.service';
-import logger from '../../shared/logger/logger';
-import { aiService } from '../../shared/services/ai/ai.service';
-import { bot } from '../index';
-import { formatDailyEvaluationMessage, formatReminderMessage } from '../resources/learning-messages';
+import { bot } from 'src/bot/index';
+import { formatDailyEvaluationMessage, formatReminderMessage } from 'src/bot/resources/learning-messages';
+import { IVocabulary } from 'src/database/models/vocabulary.model';
+import { groupService } from 'src/database/services/group.service';
+import { userService } from 'src/database/services/user.service';
+import { userResponseService } from 'src/database/services/user-response.service';
+import { userStatsService } from 'src/database/services/user-stats.service';
+import { vocabularyService } from 'src/database/services/vocabulary.service';
+import { weeklyTopicService } from 'src/database/services/weekly-topic.service';
+import logger from 'src/shared/logger/logger';
+import { aiService } from 'src/shared/services/ai/ai.service';
 
 export async function dailyEvaluationJob(_job: Bull.Job) {
+  const startTime = new Date();
+  logger.info(`🚀 CRONJOB STARTED: Daily Evaluation | ${startTime.toISOString()} (${startTime.toLocaleString()})`);
+
   try {
     logger.info('Starting daily evaluation job');
 
@@ -85,10 +88,20 @@ export async function dailyEvaluationJob(_job: Bull.Job) {
         // Sort responses by score
         responses.sort((a, b) => b.score - a.score);
 
-        // Format leaderboard
+        // Fetch user information for top responders
+        const topResponses = responses.slice(0, 5);
+        const userIds = topResponses.map((r) => r.userId);
+        const users = await userService.findUsersByTelegramIds(userIds);
+        const userMap = new Map(users.map((u) => [u.telegramUserId, u]));
+
+        // Format leaderboard with usernames
         const leaderboardText = formatDailyEvaluationMessage({
           word: todayVocab?.word,
-          topResponses: responses.slice(0, 5),
+          topResponses: topResponses.map((r) => ({
+            userId: r.userId,
+            username: userService.getDisplayName(userMap.get(r.userId) || null, r.userId),
+            score: r.score,
+          })),
         });
 
         // Send leaderboard
@@ -127,9 +140,23 @@ export async function dailyEvaluationJob(_job: Bull.Job) {
       }
     }
 
+    const endTime = new Date();
+    const duration = endTime.getTime() - startTime.getTime();
     logger.info('Daily evaluation job completed');
+    logger.info(
+      `✅ CRONJOB COMPLETED: Daily Evaluation | Duration: ${duration}ms (${(duration / 1000).toFixed(
+        2
+      )}s) | ${endTime.toISOString()}`
+    );
   } catch (error) {
+    const endTime = new Date();
+    const duration = endTime.getTime() - startTime.getTime();
     logger.error(`Daily evaluation job failed: ${error}`);
+    logger.error(
+      `❌ CRONJOB FAILED: Daily Evaluation | Duration: ${duration}ms (${(duration / 1000).toFixed(
+        2
+      )}s) | Error: ${error}`
+    );
     throw error;
   }
 }

@@ -1,4 +1,4 @@
-import { telegramApiService } from '../../shared/services/telegram-api.service';
+import { telegramApiService } from 'src/shared/services/telegram-api.service';
 
 interface BotCommand {
   command: string;
@@ -13,10 +13,6 @@ export class SetUpBotCommand {
       {
         command: 'start',
         description: 'Start the bot and show welcome message',
-      },
-      {
-        command: 'menu',
-        description: 'Open the interactive main menu',
       },
       {
         command: 'help',

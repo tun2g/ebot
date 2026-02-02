@@ -207,32 +207,31 @@ Daily vocabulary will start ${startTime}!`;
  */
 export const formatDailyEvaluationMessage = (data: {
   word?: string;
-  topResponses: Array<{ userId: number; score: number }>;
+  topResponses: Array<{ userId: number; username: string; score: number }>;
 }): string => {
-  let message = `${MESSAGES.EVALUATION.HEADER}\n\n`;
+  const wordSection = data.word ? `${MESSAGES.EVALUATION.WORD_PREFIX} **${data.word}**\n\n` : '';
 
-  if (data.word) {
-    message += `${MESSAGES.EVALUATION.WORD_PREFIX} **${data.word}**\n\n`;
-  }
+  const performersText = data.topResponses
+    .map((r, index) => {
+      const medal =
+        index === 0
+          ? MESSAGES.EVALUATION.MEDALS.FIRST
+          : index === 1
+          ? MESSAGES.EVALUATION.MEDALS.SECOND
+          : index === 2
+          ? MESSAGES.EVALUATION.MEDALS.THIRD
+          : MESSAGES.EVALUATION.MEDALS.OTHER;
+      return `${medal} ${r.username}: ${r.score}/10 points`;
+    })
+    .join('\n');
 
-  message += `${MESSAGES.EVALUATION.TOP_PERFORMERS}\n`;
+  return `${MESSAGES.EVALUATION.HEADER}
 
-  data.topResponses.forEach((r, index) => {
-    const medal =
-      index === 0
-        ? MESSAGES.EVALUATION.MEDALS.FIRST
-        : index === 1
-        ? MESSAGES.EVALUATION.MEDALS.SECOND
-        : index === 2
-        ? MESSAGES.EVALUATION.MEDALS.THIRD
-        : MESSAGES.EVALUATION.MEDALS.OTHER;
-    message += `${medal} User ${r.userId}: ${r.score}/10 points\n`;
-  });
+${wordSection}${MESSAGES.EVALUATION.TOP_PERFORMERS}
+${performersText}
 
-  message += `\n${MESSAGES.EVALUATION.ALL_EVALUATED}`;
-  message += `\n${MESSAGES.EVALUATION.KEEP_GOING}`;
-
-  return message;
+${MESSAGES.EVALUATION.ALL_EVALUATED}
+${MESSAGES.EVALUATION.KEEP_GOING}`;
 };
 
 /**
@@ -254,47 +253,52 @@ export const formatWeeklySummaryMessage = (data: {
   avgScore: number;
   topPerformers: Array<{
     userId: number;
+    username: string;
     totalScore: number;
     responsesSubmitted: number;
   }>;
   vocabularies: Array<{ word: string; vietnameseMeaning: string }>;
 }): string => {
-  let message = `${MESSAGES.WEEKLY_SUMMARY.HEADER}\n\n`;
-  message += `${MESSAGES.WEEKLY_SUMMARY.TOPIC_LABEL} **${data.topicName}**\n`;
-  message += `${
-    MESSAGES.WEEKLY_SUMMARY.WEEK_LABEL
-  } ${data.startDate.toLocaleDateString()} - ${data.endDate.toLocaleDateString()}\n\n`;
+  const performersText = data.topPerformers
+    .slice(0, 5)
+    .map((stats, index) => {
+      const medal =
+        index === 0
+          ? MESSAGES.EVALUATION.MEDALS.FIRST
+          : index === 1
+          ? MESSAGES.EVALUATION.MEDALS.SECOND
+          : index === 2
+          ? MESSAGES.EVALUATION.MEDALS.THIRD
+          : MESSAGES.EVALUATION.MEDALS.OTHER;
+      const avgUserScore = stats.responsesSubmitted > 0 ? stats.totalScore / stats.responsesSubmitted : 0;
+      return `${medal} ${stats.username}: ${stats.totalScore.toFixed(1)} points (${
+        stats.responsesSubmitted
+      } responses, avg: ${avgUserScore.toFixed(1)})`;
+    })
+    .join('\n');
 
-  message += `${MESSAGES.WEEKLY_SUMMARY.STATISTICS_HEADER}\n`;
-  message += `${MESSAGES.WEEKLY_SUMMARY.TOTAL_DAYS} ${data.totalDays}\n`;
-  message += `${MESSAGES.WEEKLY_SUMMARY.TOTAL_RESPONSES} ${data.totalResponses}\n`;
-  message += `${MESSAGES.WEEKLY_SUMMARY.UNIQUE_PARTICIPANTS} ${data.uniqueParticipants}\n`;
-  message += `${MESSAGES.WEEKLY_SUMMARY.AVERAGE_SCORE} ${data.avgScore.toFixed(1)}/10\n\n`;
+  const vocabulariesText = data.vocabularies
+    .map((vocab, index) => `${index + 1}. ${vocab.word} - ${vocab.vietnameseMeaning}`)
+    .join('\n');
 
-  message += `${MESSAGES.WEEKLY_SUMMARY.TOP_PERFORMERS}\n`;
-  data.topPerformers.slice(0, 5).forEach((stats, index) => {
-    const medal =
-      index === 0
-        ? MESSAGES.EVALUATION.MEDALS.FIRST
-        : index === 1
-        ? MESSAGES.EVALUATION.MEDALS.SECOND
-        : index === 2
-        ? MESSAGES.EVALUATION.MEDALS.THIRD
-        : MESSAGES.EVALUATION.MEDALS.OTHER;
-    const avgUserScore = stats.responsesSubmitted > 0 ? stats.totalScore / stats.responsesSubmitted : 0;
-    message += `${medal} User ${stats.userId}: ${stats.totalScore.toFixed(1)} points (${
-      stats.responsesSubmitted
-    } responses, avg: ${avgUserScore.toFixed(1)})\n`;
-  });
+  return `${MESSAGES.WEEKLY_SUMMARY.HEADER}
 
-  message += `\n${MESSAGES.WEEKLY_SUMMARY.VOCABULARY_COVERED}\n`;
-  data.vocabularies.forEach((vocab, index) => {
-    message += `${index + 1}. ${vocab.word} - ${vocab.vietnameseMeaning}\n`;
-  });
+${MESSAGES.WEEKLY_SUMMARY.TOPIC_LABEL} **${data.topicName}**
+${MESSAGES.WEEKLY_SUMMARY.WEEK_LABEL} ${data.startDate.toLocaleDateString()} - ${data.endDate.toLocaleDateString()}
 
-  message += `\n${MESSAGES.WEEKLY_SUMMARY.CLOSING}`;
+${MESSAGES.WEEKLY_SUMMARY.STATISTICS_HEADER}
+${MESSAGES.WEEKLY_SUMMARY.TOTAL_DAYS} ${data.totalDays}
+${MESSAGES.WEEKLY_SUMMARY.TOTAL_RESPONSES} ${data.totalResponses}
+${MESSAGES.WEEKLY_SUMMARY.UNIQUE_PARTICIPANTS} ${data.uniqueParticipants}
+${MESSAGES.WEEKLY_SUMMARY.AVERAGE_SCORE} ${data.avgScore.toFixed(1)}/10
 
-  return message;
+${MESSAGES.WEEKLY_SUMMARY.TOP_PERFORMERS}
+${performersText}
+
+${MESSAGES.WEEKLY_SUMMARY.VOCABULARY_COVERED}
+${vocabulariesText}
+
+${MESSAGES.WEEKLY_SUMMARY.CLOSING}`;
 };
 
 /**

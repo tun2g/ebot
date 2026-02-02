@@ -1,10 +1,9 @@
 import mongoose from 'mongoose';
-
-import { WeeklyTopicStatus } from '../../../database/models/weekly-topic.model';
-import { weeklyTopicService } from '../../../database/services/weekly-topic.service';
-import logger from '../../../shared/logger/logger';
-import { BotContext } from '../../interface/context';
-import { learningMenu } from './learning.menu';
+import { BotContext } from 'src/bot/interface/context';
+import { learningMenu } from 'src/bot/menus/learning/learning.menu';
+import { WeeklyTopicStatus } from 'src/database/models/weekly-topic.model';
+import { weeklyTopicService } from 'src/database/services/weekly-topic.service';
+import logger from 'src/shared/logger/logger';
 
 export class LearningMenuActionHandler {
   private actionsMap: Map<string | RegExp, (ctx: BotContext) => void>;
@@ -15,7 +14,7 @@ export class LearningMenuActionHandler {
 
   register() {
     // Regex pattern to match topic selection callbacks
-    this.actionsMap.set(/^selectTopic_(.+)_(\d+)$/, this.selectTopic);
+    this.actionsMap.set(/^selectTopic_(.+)_(\d+)$/, this.selectTopic.bind(this));
     return this.actionsMap;
   }
 

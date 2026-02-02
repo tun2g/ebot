@@ -36,6 +36,7 @@
   // ESLint Configuration
   "eslint.validate": ["javascript", "javascriptreact", "typescript", "typescriptreact"],
   "eslint.format.enable": false,
+  "eslint.workingDirectories": [{ "mode": "auto" }],
 
   // TypeScript Configuration
   "typescript.updateImportsOnFileMove.enabled": "always",

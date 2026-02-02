@@ -1,22 +1,21 @@
+import { botMessageHandler } from 'src/bot/bot-message-handler';
+import { devCommand } from 'src/bot/commands/dev/dev.command';
+import { helpCommand } from 'src/bot/commands/help/help.command';
+import { learningCommand } from 'src/bot/commands/learning/learning.command';
+import { startCommand } from 'src/bot/commands/start/start.command';
+import { statsCommand } from 'src/bot/commands/stats/stats.command';
+import { topicCommand } from 'src/bot/commands/topic/topic.command';
+import { BotContext } from 'src/bot/interface/context';
+import { learningMenuActionHandler } from 'src/bot/menus/learning/learning.action-handler';
+import { learningMenuHandler } from 'src/bot/menus/learning/learning.handler';
+import { mainMenuActionHandler } from 'src/bot/menus/main/main.action-handler';
+import { mainMenuHandler } from 'src/bot/menus/main/main.handler';
+import { authMiddleware } from 'src/bot/middlewares/auth.middleware';
+import { loggerMiddleware } from 'src/bot/middlewares/logger.middleware';
+import { mentionCheckMiddleware } from 'src/bot/middlewares/mention-check.middleware';
+import { configService } from 'src/configs/configuration';
+import logger from 'src/shared/logger/logger';
 import { Telegraf } from 'telegraf';
-
-import { configService } from '../configs/configuration';
-import logger from '../shared/logger/logger';
-import { botMessageHandler } from './bot-message-handler';
-import { helpCommand } from './commands/help/help.command';
-import { learningCommand } from './commands/learning/learning.command';
-import { menuCommand } from './commands/menu/menu.command';
-import { startCommand } from './commands/start/start.command';
-import { statsCommand } from './commands/stats/stats.command';
-import { topicCommand } from './commands/topic/topic.command';
-import { BotContext } from './interface/context';
-import { learningMenuActionHandler } from './menus/learning/learning.action-handler';
-import { learningMenuHandler } from './menus/learning/learning.handler';
-import { mainMenuActionHandler } from './menus/main/main.action-handler';
-import { mainMenuHandler } from './menus/main/main.handler';
-import { authMiddleware } from './middlewares/auth.middleware';
-import { loggerMiddleware } from './middlewares/logger.middleware';
-import { mentionCheckMiddleware } from './middlewares/mention-check.middleware';
 
 const bot = new Telegraf<BotContext>(configService.botToken);
 
@@ -40,10 +39,10 @@ Array.from(publicCommands).forEach(([command, callback]) => {
 bot.use(authMiddleware);
 
 const privateCommands: Map<string, (ctx: BotContext) => void> = new Map<string, (ctx: BotContext) => void>([
-  ...menuCommand.register(),
   ...learningCommand.register(),
   ...topicCommand.register(),
   ...statsCommand.register(),
+  ...devCommand.register(),
 ]);
 
 Array.from(privateCommands).forEach(([command, callback]) => {
