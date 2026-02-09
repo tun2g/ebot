@@ -37,7 +37,7 @@ interface FuseAPIResponse {
 export class FuseProvider implements AIProvider {
   private apiUrl: string;
   private apiKey: string;
-  private model = 'claude-opus-4.5';
+  private model = 'claude-opus-4.6';
 
   constructor() {
     this.apiUrl = configService.ai.fuseApiUrl;
