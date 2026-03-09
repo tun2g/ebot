@@ -9,7 +9,7 @@ export class GeminiProvider implements AIProvider {
 
   constructor() {
     this.genAI = new GoogleGenerativeAI(configService.ai.apiKey);
-    this.model = this.genAI.getGenerativeModel({ model: 'gemini-2.0-flash-exp' });
+    this.model = this.genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
   }
 
   private parseError(error: unknown): string {
