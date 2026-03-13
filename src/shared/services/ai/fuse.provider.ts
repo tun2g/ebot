@@ -212,19 +212,22 @@ Evaluate based on:
 2. Usage (0-3 points): Correct and natural use of the target word
 3. Complexity (0-3 points): Sentence sophistication and vocabulary richness
 
-Provide:
-- Total score (0-10, sum of breakdown)
-- Brief feedback in Vietnamese (1-2 sentences)
-- Breakdown scores
+For each category, provide:
+- The score
+- A concise comment in English (1-2 sentences) explaining WHY that score was given, pointing out specific mistakes if any, and giving suggestions for improvement
+
+Also provide:
+- Total score (0-10, sum of breakdown scores)
+- Overall feedback in English (1-2 sentences summarizing the evaluation)
 
 Return ONLY a JSON object with this exact structure:
 {
   "score": 8,
-  "feedback": "Câu của bạn rất tốt! Ngữ pháp chính xác và từ được sử dụng tự nhiên.",
+  "feedback": "Your sentence is very good! The grammar is accurate and the word is used naturally.",
   "breakdown": {
-    "grammar": 4,
-    "usage": 3,
-    "complexity": 1
+    "grammar": { "score": 4, "comment": "Grammar is completely correct, with a clear and natural sentence structure." },
+    "usage": { "score": 3, "comment": "The word is used in the right context and very naturally." },
+    "complexity": { "score": 1, "comment": "The sentence is quite simple; try using subordinate clauses or richer vocabulary." }
   }
 }
 
@@ -245,10 +248,13 @@ JSON:`;
       const evaluation = JSON.parse(jsonMatch[0]);
 
       // Validate scores
-      evaluation.score = Math.min(10, Math.max(0, evaluation.score));
-      evaluation.breakdown.grammar = Math.min(4, Math.max(0, evaluation.breakdown.grammar));
-      evaluation.breakdown.usage = Math.min(3, Math.max(0, evaluation.breakdown.usage));
-      evaluation.breakdown.complexity = Math.min(3, Math.max(0, evaluation.breakdown.complexity));
+      evaluation.breakdown.grammar.score = Math.min(4, Math.max(0, evaluation.breakdown.grammar.score));
+      evaluation.breakdown.usage.score = Math.min(3, Math.max(0, evaluation.breakdown.usage.score));
+      evaluation.breakdown.complexity.score = Math.min(3, Math.max(0, evaluation.breakdown.complexity.score));
+
+      // Recalculate total score as sum of breakdown scores
+      evaluation.score =
+        evaluation.breakdown.grammar.score + evaluation.breakdown.usage.score + evaluation.breakdown.complexity.score;
 
       return evaluation;
     } catch (error) {

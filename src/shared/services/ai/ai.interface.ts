@@ -8,11 +8,11 @@ export interface VocabularyData {
 
 export interface EvaluationResult {
   score: number; // 0-10
-  feedback: string;
+  feedback: string; // Overall summary in Vietnamese
   breakdown: {
-    grammar: number; // 0-4
-    usage: number; // 0-3
-    complexity: number; // 0-3
+    grammar: { score: number; comment: string }; // 0-4, explain why
+    usage: { score: number; comment: string }; // 0-3, explain why
+    complexity: { score: number; comment: string }; // 0-3, explain why
   };
 }
 

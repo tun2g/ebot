@@ -207,7 +207,18 @@ Daily vocabulary will start ${startTime}!`;
  */
 export const formatDailyEvaluationMessage = (data: {
   word?: string;
-  topResponses: Array<{ userId: number; username: string; score: number }>;
+  topResponses: Array<{
+    userId: number;
+    username: string;
+    score: number;
+    sentence: string;
+    feedback: string;
+    breakdown: {
+      grammar: { score: number; comment: string };
+      usage: { score: number; comment: string };
+      complexity: { score: number; comment: string };
+    };
+  }>;
 }): string => {
   const wordSection = data.word ? `${MESSAGES.EVALUATION.WORD_PREFIX} **${data.word}**\n\n` : '';
 
@@ -221,13 +232,19 @@ export const formatDailyEvaluationMessage = (data: {
           : index === 2
           ? MESSAGES.EVALUATION.MEDALS.THIRD
           : MESSAGES.EVALUATION.MEDALS.OTHER;
-      return `${medal} ${r.username}: ${r.score}/10 points`;
+      return `${medal} ${r.username}: ${r.score}/10 points
+📝 "${r.sentence}"
+📖 Grammar (${r.breakdown.grammar.score}/4): ${r.breakdown.grammar.comment}
+💬 Usage (${r.breakdown.usage.score}/3): ${r.breakdown.usage.comment}
+⭐ Complexity (${r.breakdown.complexity.score}/3): ${r.breakdown.complexity.comment}
+💡 Overall: ${r.feedback}`;
     })
-    .join('\n');
+    .join('\n\n');
 
   return `${MESSAGES.EVALUATION.HEADER}
 
 ${wordSection}${MESSAGES.EVALUATION.TOP_PERFORMERS}
+
 ${performersText}
 
 ${MESSAGES.EVALUATION.ALL_EVALUATED}

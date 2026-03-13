@@ -73,9 +73,9 @@ export class UserResponseService {
       score: number;
       feedback: string;
       breakdown: {
-        grammar: number;
-        usage: number;
-        complexity: number;
+        grammar: { score: number; comment: string };
+        usage: { score: number; comment: string };
+        complexity: { score: number; comment: string };
       };
     }
   ): Promise<IUserResponse | null> {

@@ -238,7 +238,17 @@ export class DevCommand {
 
       await ctx.reply(`Found ${pendingResponses.length} pending responses. Starting evaluation...`);
 
-      const evaluatedResponses: Array<{ userId: number; sentence: string; score: number; feedback: string }> = [];
+      const evaluatedResponses: Array<{
+        userId: number;
+        sentence: string;
+        score: number;
+        feedback: string;
+        breakdown: {
+          grammar: { score: number; comment: string };
+          usage: { score: number; comment: string };
+          complexity: { score: number; comment: string };
+        };
+      }> = [];
 
       // Fetch user information for all responders
       const allUserIds = pendingResponses.map((r) => r.userId);
@@ -282,6 +292,7 @@ export class DevCommand {
             sentence: response.sentence,
             score: evaluation.score,
             feedback: evaluation.feedback,
+            breakdown: evaluation.breakdown,
           });
 
           logger.info(`[DEV] Evaluated response ${response._id}: score ${evaluation.score}`);
@@ -307,6 +318,9 @@ export class DevCommand {
             userId: r.userId,
             username: userService.getDisplayName(userMap.get(r.userId) || null, r.userId),
             score: r.score,
+            sentence: r.sentence,
+            feedback: r.feedback,
+            breakdown: r.breakdown,
           })),
         });
 

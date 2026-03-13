@@ -26,7 +26,17 @@ export async function dailyEvaluationJob(_job: Bull.Job) {
     // Group responses by group for reporting
     const responsesByGroup: Map<
       string,
-      Array<{ userId: number; sentence: string; score: number; feedback: string }>
+      Array<{
+        userId: number;
+        sentence: string;
+        score: number;
+        feedback: string;
+        breakdown: {
+          grammar: { score: number; comment: string };
+          usage: { score: number; comment: string };
+          complexity: { score: number; comment: string };
+        };
+      }>
     > = new Map();
 
     // Evaluate each response
@@ -65,6 +75,7 @@ export async function dailyEvaluationJob(_job: Bull.Job) {
             sentence: response.sentence,
             score: evaluation.score,
             feedback: evaluation.feedback,
+            breakdown: evaluation.breakdown,
           });
         }
 
@@ -101,6 +112,9 @@ export async function dailyEvaluationJob(_job: Bull.Job) {
             userId: r.userId,
             username: userService.getDisplayName(userMap.get(r.userId) || null, r.userId),
             score: r.score,
+            sentence: r.sentence,
+            feedback: r.feedback,
+            breakdown: r.breakdown,
           })),
         });
 

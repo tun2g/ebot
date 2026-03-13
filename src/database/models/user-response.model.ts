@@ -8,9 +8,9 @@ export interface IUserResponse extends Document {
   score?: number;
   feedback?: string;
   breakdown?: {
-    grammar: number;
-    usage: number;
-    complexity: number;
+    grammar: { score: number; comment: string };
+    usage: { score: number; comment: string };
+    complexity: { score: number; comment: string };
   };
   submittedAt: Date;
   evaluatedAt?: Date;
@@ -52,19 +52,22 @@ const UserResponseSchema: Schema = new Schema(
     breakdown: {
       type: {
         grammar: {
-          type: Number,
-          min: 0,
-          max: 4,
+          type: {
+            score: { type: Number, min: 0, max: 4 },
+            comment: { type: String, default: '' },
+          },
         },
         usage: {
-          type: Number,
-          min: 0,
-          max: 3,
+          type: {
+            score: { type: Number, min: 0, max: 3 },
+            comment: { type: String, default: '' },
+          },
         },
         complexity: {
-          type: Number,
-          min: 0,
-          max: 3,
+          type: {
+            score: { type: Number, min: 0, max: 3 },
+            comment: { type: String, default: '' },
+          },
         },
       },
       default: null,
