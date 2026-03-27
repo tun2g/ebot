@@ -1,6 +1,7 @@
 import { CurrentAction } from 'src/bot/constants/current-action';
 import { topicSelectionHandler } from 'src/bot/handlers/topic-selection.handler';
 import { vocabularyResponseHandler } from 'src/bot/handlers/vocabulary-response.handler';
+import { voiceResponseHandler } from 'src/bot/handlers/voice-response.handler';
 import { BotContext } from 'src/bot/interface/context';
 import { sessionService } from 'src/shared/services/session.service';
 
@@ -21,6 +22,12 @@ export class BotMessageHandler {
   }
 
   async process(ctx: BotContext) {
+    // Handle voice/audio messages first (for voice practice)
+    if (ctx.message && ('voice' in ctx.message || 'audio' in ctx.message)) {
+      const voiceHandled = await voiceResponseHandler.handle(ctx);
+      if (voiceHandled) return;
+    }
+
     // Check if this is a reply to a bot message (for topic selection or vocabulary response)
     if (ctx.message && 'reply_to_message' in ctx.message && ctx.message.reply_to_message) {
       // Try topic selection handler first

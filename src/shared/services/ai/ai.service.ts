@@ -33,6 +33,14 @@ class AIService {
   async evaluateSentence(word: string, sentence: string) {
     return this.provider.evaluateSentence(word, sentence);
   }
+
+  async generateVoiceSentence(topic?: string) {
+    return this.provider.generateVoiceSentence(topic);
+  }
+
+  async evaluateVoicePronunciation(audioBuffer: Buffer, mimeType: string, expectedSentence: string) {
+    return this.provider.evaluateVoicePronunciation(audioBuffer, mimeType, expectedSentence);
+  }
 }
 
 export const aiService = new AIService();

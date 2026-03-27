@@ -1,7 +1,14 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { configService } from 'src/configs/configuration';
 import logger from 'src/shared/logger/logger';
-import { AIProvider, EvaluationResult, VocabularyData } from 'src/shared/services/ai/ai.interface';
+import {
+  AIProvider,
+  ChatMessage,
+  EvaluationResult,
+  VocabularyData,
+  VoicePracticeResult,
+  VoicePronunciationResult,
+} from 'src/shared/services/ai/ai.interface';
 
 export class GeminiProvider implements AIProvider {
   private genAI: GoogleGenerativeAI;
@@ -195,6 +202,175 @@ JSON:`;
     } catch (error) {
       const errorMessage = this.parseError(error);
       logger.error(`Error evaluating sentence: ${error}`);
+      throw new Error(errorMessage);
+    }
+  }
+
+  async generateVoiceSentence(topic?: string): Promise<VoicePracticeResult> {
+    try {
+      const topicInstruction = topic
+        ? `The sentence should be related to the topic "${topic}".`
+        : 'Choose a random everyday topic (e.g., travel, food, technology, work, hobbies).';
+
+      const prompt = `You are an English pronunciation coach. Generate a single English sentence for a student to practice speaking aloud.
+
+Requirements:
+- The sentence should be 10-20 words long
+- Use natural, conversational English
+- Include a mix of common and slightly challenging pronunciation patterns (e.g., th, r/l, vowel sounds, consonant clusters)
+- ${topicInstruction}
+- Provide a brief pronunciation tip for the sentence
+
+Return ONLY a JSON object with this exact structure:
+{
+  "sentence": "The weather forecast predicts thunderstorms throughout the entire weekend.",
+  "tip": "Pay attention to the 'th' sounds in 'the', 'weather', 'thunderstorms', and 'throughout'. Place your tongue between your teeth."
+}
+
+JSON:`;
+
+      const result = await this.model.generateContent(prompt);
+      const response = result.response;
+      const text = response.text();
+
+      const jsonMatch = text.match(/\{[\s\S]*\}/);
+      if (!jsonMatch) {
+        logger.error('Failed to parse AI response for voice sentence');
+        throw new Error('AI service error: Failed to parse response');
+      }
+
+      return JSON.parse(jsonMatch[0]);
+    } catch (error) {
+      const errorMessage = this.parseError(error);
+      logger.error(`Error generating voice sentence: ${error}`);
+      throw new Error(errorMessage);
+    }
+  }
+
+  async evaluateVoicePronunciation(
+    audioBuffer: Buffer,
+    mimeType: string,
+    expectedSentence: string
+  ): Promise<VoicePronunciationResult> {
+    try {
+      const audioBase64 = audioBuffer.toString('base64');
+
+      const prompt = `You are an English pronunciation evaluator. Listen to this audio recording and evaluate the student's pronunciation.
+
+The student was asked to read this sentence aloud:
+"${expectedSentence}"
+
+Instructions:
+1. First, transcribe exactly what you hear in the audio
+2. Compare the transcription with the expected sentence
+3. Evaluate pronunciation quality
+
+Evaluate based on:
+1. Accuracy (0-4 points): How closely the spoken words match the expected sentence (correct words, no omissions/additions)
+2. Fluency (0-3 points): Natural rhythm, appropriate pace, smooth delivery without excessive pauses or hesitation
+3. Intonation (0-3 points): Proper stress patterns, rising/falling tones, natural English prosody
+
+For each category, provide:
+- The score
+- A concise comment in English (1-2 sentences) with specific feedback
+
+Also provide:
+- Total score (0-10, sum of breakdown scores)
+- Overall feedback in English (2-3 sentences summarizing the evaluation and giving actionable improvement tips)
+
+Return ONLY a JSON object with this exact structure:
+{
+  "transcription": "what you actually heard",
+  "score": 7,
+  "feedback": "Good pronunciation overall! You spoke clearly and most words were accurate. Try to work on the 'th' sound and maintain a more natural rhythm.",
+  "breakdown": {
+    "accuracy": { "score": 3, "comment": "Most words were pronounced correctly, but 'throughout' sounded like 'troughout'." },
+    "fluency": { "score": 2, "comment": "Generally smooth but there was a noticeable pause before 'thunderstorms'." },
+    "intonation": { "score": 2, "comment": "Good falling intonation at the end, but the sentence sounded a bit flat in the middle." }
+  }
+}
+
+JSON:`;
+
+      const result = await this.model.generateContent({
+        contents: [
+          {
+            role: 'user',
+            parts: [
+              {
+                inlineData: {
+                  mimeType,
+                  data: audioBase64,
+                },
+              },
+              { text: prompt },
+            ],
+          },
+        ],
+        generationConfig: {
+          temperature: 0,
+        },
+      });
+
+      const response = result.response;
+      const text = response.text();
+
+      const jsonMatch = text.match(/\{[\s\S]*\}/);
+      if (!jsonMatch) {
+        logger.error('Failed to parse AI response for voice evaluation');
+        throw new Error('AI service error: Failed to parse response');
+      }
+
+      const evaluation = JSON.parse(jsonMatch[0]);
+
+      // Validate scores
+      evaluation.breakdown.accuracy.score = Math.min(4, Math.max(0, evaluation.breakdown.accuracy.score));
+      evaluation.breakdown.fluency.score = Math.min(3, Math.max(0, evaluation.breakdown.fluency.score));
+      evaluation.breakdown.intonation.score = Math.min(3, Math.max(0, evaluation.breakdown.intonation.score));
+
+      // Recalculate total score
+      evaluation.score =
+        evaluation.breakdown.accuracy.score +
+        evaluation.breakdown.fluency.score +
+        evaluation.breakdown.intonation.score;
+
+      return evaluation;
+    } catch (error) {
+      const errorMessage = this.parseError(error);
+      logger.error(`Error evaluating voice pronunciation: ${error}`);
+      throw new Error(errorMessage);
+    }
+  }
+
+  async chat(messages: ChatMessage[]): Promise<string> {
+    try {
+      const systemPrompt = `You are a friendly and helpful English language assistant. Your role is to:
+- Help users practice and improve their English
+- Answer questions about English grammar, vocabulary, pronunciation, and usage
+- Correct mistakes gently and explain why
+- Provide examples and alternative ways to express ideas
+- Adapt your language level to the user's proficiency
+- Be encouraging and supportive
+- Keep responses concise but informative
+- If the user writes in Vietnamese, respond in a mix of English and Vietnamese to help them understand
+
+You are having a conversation. Respond naturally and helpfully.`;
+
+      const contents = messages.map((msg) => ({
+        role: msg.role === 'user' ? ('user' as const) : ('model' as const),
+        parts: [{ text: msg.content }],
+      }));
+
+      const result = await this.model.generateContent({
+        contents,
+        systemInstruction: { role: 'user' as const, parts: [{ text: systemPrompt }] },
+      });
+
+      const response = result.response;
+      return response.text();
+    } catch (error) {
+      const errorMessage = this.parseError(error);
+      logger.error(`Error in chat: ${error}`);
       throw new Error(errorMessage);
     }
   }

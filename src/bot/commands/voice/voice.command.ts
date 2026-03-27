@@ -1,0 +1,57 @@
+import { BotContext } from 'src/bot/interface/context';
+import { VOICE_MESSAGES } from 'src/bot/resources/voice-messages';
+import logger from 'src/shared/logger/logger';
+import { aiService } from 'src/shared/services/ai/ai.service';
+import { sessionService } from 'src/shared/services/session.service';
+
+export class VoiceCommand {
+  private map: Map<string, (ctx: BotContext) => void>;
+  public commands = {
+    voice: 'voice',
+  };
+
+  constructor() {
+    this.map = new Map<string, (ctx: BotContext) => void>();
+  }
+
+  register() {
+    this.map.set(this.commands.voice, this.onVoice.bind(this));
+    return this.map;
+  }
+
+  private async onVoice(ctx: BotContext) {
+    try {
+      // Send "generating" message
+      await ctx.reply(VOICE_MESSAGES.GENERATING, { parse_mode: 'Markdown' });
+
+      // Generate a sentence
+      const result = await aiService.generateVoiceSentence();
+
+      // Send the sentence with instructions
+      const sentenceMessage = await ctx.reply(VOICE_MESSAGES.SENTENCE_TEMPLATE(result.sentence, result.tip), {
+        parse_mode: 'Markdown',
+      });
+
+      // Store the sentence and message ID in session for the voice response handler
+      await sessionService.setSession(ctx, {
+        voicePracticeSentence: result.sentence,
+        voicePracticeMessageId: sentenceMessage.message_id,
+      });
+
+      logger.info(
+        `[Voice] Sentence generated - UserID: ${ctx.from?.id}, MessageID: ${sentenceMessage.message_id}, Sentence: "${result.sentence}"`
+      );
+    } catch (error) {
+      logger.error(`[Voice] Error generating sentence: ${error}`);
+
+      const errorMessage =
+        error instanceof Error && error.message.includes('not supported')
+          ? VOICE_MESSAGES.ERROR_PROVIDER_NOT_SUPPORTED
+          : VOICE_MESSAGES.ERROR_GENERATING;
+
+      await ctx.reply(errorMessage, { parse_mode: 'Markdown' });
+    }
+  }
+}
+
+export const voiceCommand = new VoiceCommand();

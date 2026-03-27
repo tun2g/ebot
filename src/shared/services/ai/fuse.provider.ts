@@ -1,6 +1,12 @@
 import { configService } from 'src/configs/configuration';
 import logger from 'src/shared/logger/logger';
-import { AIProvider, EvaluationResult, VocabularyData } from 'src/shared/services/ai/ai.interface';
+import {
+  AIProvider,
+  EvaluationResult,
+  VocabularyData,
+  VoicePracticeResult,
+  VoicePronunciationResult,
+} from 'src/shared/services/ai/ai.interface';
 
 interface FuseAPIMessage {
   role: 'user' | 'assistant';
@@ -262,5 +268,17 @@ JSON:`;
       logger.error(`Error evaluating sentence: ${error}`);
       throw new Error(errorMessage);
     }
+  }
+
+  async generateVoiceSentence(_topic?: string): Promise<VoicePracticeResult> {
+    throw new Error('Voice feature is not supported with the Fuse provider. Please use AI_PROVIDER=gemini.');
+  }
+
+  async evaluateVoicePronunciation(
+    _audioBuffer: Buffer,
+    _mimeType: string,
+    _expectedSentence: string
+  ): Promise<VoicePronunciationResult> {
+    throw new Error('Voice feature is not supported with the Fuse provider. Please use AI_PROVIDER=gemini.');
   }
 }

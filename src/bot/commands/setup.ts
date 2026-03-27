@@ -30,6 +30,10 @@ export class SetUpBotCommand {
         command: 'stats',
         description: 'Show your learning statistics',
       },
+      {
+        command: 'voice',
+        description: 'Practice English pronunciation with voice',
+      },
     ];
   }
 

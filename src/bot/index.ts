@@ -5,6 +5,7 @@ import { learningCommand } from 'src/bot/commands/learning/learning.command';
 import { startCommand } from 'src/bot/commands/start/start.command';
 import { statsCommand } from 'src/bot/commands/stats/stats.command';
 import { topicCommand } from 'src/bot/commands/topic/topic.command';
+import { voiceCommand } from 'src/bot/commands/voice/voice.command';
 import { BotContext } from 'src/bot/interface/context';
 import { learningMenuActionHandler } from 'src/bot/menus/learning/learning.action-handler';
 import { learningMenuHandler } from 'src/bot/menus/learning/learning.handler';
@@ -43,6 +44,7 @@ const privateCommands: Map<string, (ctx: BotContext) => void> = new Map<string, 
   ...topicCommand.register(),
   ...statsCommand.register(),
   ...devCommand.register(),
+  ...voiceCommand.register(),
 ]);
 
 Array.from(privateCommands).forEach(([command, callback]) => {
