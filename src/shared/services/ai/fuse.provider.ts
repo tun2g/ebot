@@ -312,4 +312,8 @@ You are having a conversation. Respond naturally and helpfully.`;
       throw new Error(errorMessage);
     }
   }
+
+  async generateSpeech(_text: string): Promise<Buffer> {
+    throw new Error('Speech generation is not supported with the Fuse provider. Please use AI_PROVIDER=gemini.');
+  }
 }

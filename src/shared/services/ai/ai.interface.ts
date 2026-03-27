@@ -48,4 +48,5 @@ export interface AIProvider {
     expectedSentence: string
   ): Promise<VoicePronunciationResult>;
   chat(messages: ChatMessage[]): Promise<string>;
+  generateSpeech(text: string): Promise<Buffer>;
 }

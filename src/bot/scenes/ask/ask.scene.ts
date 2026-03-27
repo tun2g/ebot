@@ -1,3 +1,4 @@
+import { processRequestWithLoader } from 'src/bot/helper/process-request.helper';
 import { BotContext } from 'src/bot/interface/context';
 import { ASK_MESSAGES } from 'src/bot/resources/ask-messages';
 import logger from 'src/shared/logger/logger';
@@ -43,24 +44,13 @@ askScene.on('text', async (ctx) => {
     // Cap history to prevent token overflow
     const trimmedHistory = history.length > MAX_HISTORY ? history.slice(history.length - MAX_HISTORY) : history;
 
-    // Send thinking indicator
-    const thinkingMsg = await ctx.reply(ASK_MESSAGES.THINKING, { parse_mode: 'Markdown' });
-
-    // Call AI
-    const response = await aiService.chat(trimmedHistory);
-
-    // Delete thinking message
-    try {
-      await ctx.deleteMessage(thinkingMsg.message_id);
-    } catch {
-      // Ignore delete errors
-    }
+    // Call AI with loading animation
+    const response = await processRequestWithLoader(ctx, aiService.chat(trimmedHistory), '💭 Thinking...');
 
     // Send AI response (try Markdown first, fallback to plain text)
     try {
       await ctx.reply(response, { parse_mode: 'Markdown' });
     } catch {
-      // Markdown parse failed, send as plain text
       await ctx.reply(response);
     }
 

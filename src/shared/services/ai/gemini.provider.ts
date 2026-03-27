@@ -374,4 +374,88 @@ You are having a conversation. Respond naturally and helpfully.`;
       throw new Error(errorMessage);
     }
   }
+
+  async generateSpeech(text: string): Promise<Buffer> {
+    try {
+      const apiKey = configService.ai.apiKey;
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${apiKey}`;
+
+      const body = {
+        contents: [
+          {
+            parts: [
+              { text: `Say the following sentence clearly and naturally with proper English pronunciation: "${text}"` },
+            ],
+          },
+        ],
+        generationConfig: {
+          responseModalities: ['AUDIO'],
+          speechConfig: {
+            voiceConfig: {
+              prebuiltVoiceConfig: {
+                voiceName: 'Kore',
+              },
+            },
+          },
+        },
+      };
+
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+
+      if (!response.ok) {
+        const errText = await response.text();
+        throw new Error(`TTS API error ${response.status}: ${errText}`);
+      }
+
+      const data = await response.json();
+      const inlineData = data.candidates?.[0]?.content?.parts?.[0]?.inlineData;
+
+      if (!inlineData?.data) {
+        throw new Error('No audio data in TTS response');
+      }
+
+      const mimeType = inlineData.mimeType || 'audio/L16';
+      logger.info(`[TTS] Audio received - mimeType: ${mimeType}, dataLength: ${inlineData.data.length}`);
+
+      const pcmBuffer = Buffer.from(inlineData.data, 'base64');
+
+      // Gemini TTS returns raw PCM (linear16, 24kHz, mono) - wrap in WAV header
+      return this.wrapPcmInWav(pcmBuffer, 24000, 1, 16);
+    } catch (error) {
+      const errorMessage = this.parseError(error);
+      logger.error(`Error generating speech: ${error}`);
+      throw new Error(errorMessage);
+    }
+  }
+
+  /**
+   * Wraps raw PCM data in a WAV header so it can be played by Telegram
+   */
+  private wrapPcmInWav(pcmData: Buffer, sampleRate: number, channels: number, bitsPerSample: number): Buffer {
+    const byteRate = (sampleRate * channels * bitsPerSample) / 8;
+    const blockAlign = (channels * bitsPerSample) / 8;
+    const dataSize = pcmData.length;
+    const headerSize = 44;
+
+    const header = Buffer.alloc(headerSize);
+    header.write('RIFF', 0);
+    header.writeUInt32LE(dataSize + headerSize - 8, 4);
+    header.write('WAVE', 8);
+    header.write('fmt ', 12);
+    header.writeUInt32LE(16, 16); // fmt chunk size
+    header.writeUInt16LE(1, 20); // PCM format
+    header.writeUInt16LE(channels, 22);
+    header.writeUInt32LE(sampleRate, 24);
+    header.writeUInt32LE(byteRate, 28);
+    header.writeUInt16LE(blockAlign, 32);
+    header.writeUInt16LE(bitsPerSample, 34);
+    header.write('data', 36);
+    header.writeUInt32LE(dataSize, 40);
+
+    return Buffer.concat([header, pcmData]);
+  }
 }

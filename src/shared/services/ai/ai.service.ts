@@ -45,6 +45,10 @@ class AIService {
   async chat(messages: import('src/shared/services/ai/ai.interface').ChatMessage[]) {
     return this.provider.chat(messages);
   }
+
+  async generateSpeech(text: string) {
+    return this.provider.generateSpeech(text);
+  }
 }
 
 export const aiService = new AIService();

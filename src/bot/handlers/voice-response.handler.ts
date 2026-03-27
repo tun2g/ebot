@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { processRequestWithLoader } from 'src/bot/helper/process-request.helper';
 import { BotContext } from 'src/bot/interface/context';
 import { VOICE_MESSAGES } from 'src/bot/resources/voice-messages';
 import logger from 'src/shared/logger/logger';
@@ -48,11 +49,6 @@ export class VoiceResponseHandler {
         `[Voice] Processing voice reply - UserID: ${ctx.from.id}, FileID: ${voiceFile.file_id}, Expected: "${expectedSentence}"`
       );
 
-      // Send "evaluating" message
-      await ctx.reply(VOICE_MESSAGES.EVALUATING, {
-        reply_parameters: { message_id: ctx.message.message_id },
-      });
-
       // Download the voice file
       const fileLink = await ctx.telegram.getFileLink(voiceFile.file_id);
       const response = await axios.get(fileLink.toString(), { responseType: 'arraybuffer' });
@@ -63,14 +59,24 @@ export class VoiceResponseHandler {
 
       logger.info(`[Voice] Audio downloaded - Size: ${audioBuffer.length} bytes, MimeType: ${mimeType}`);
 
-      // Evaluate pronunciation
-      const evaluation = await aiService.evaluateVoicePronunciation(audioBuffer, mimeType, expectedSentence);
+      // Evaluate pronunciation with loading animation
+      const evaluation = await processRequestWithLoader(
+        ctx,
+        aiService.evaluateVoicePronunciation(audioBuffer, mimeType, expectedSentence),
+        '🔄 Analyzing your pronunciation...'
+      );
 
       // Send evaluation result
-      await ctx.reply(VOICE_MESSAGES.EVALUATION_TEMPLATE(evaluation), {
-        parse_mode: 'Markdown',
-        reply_parameters: { message_id: ctx.message.message_id },
-      });
+      try {
+        await ctx.reply(VOICE_MESSAGES.EVALUATION_TEMPLATE(evaluation), {
+          parse_mode: 'Markdown',
+          reply_parameters: { message_id: ctx.message.message_id },
+        });
+      } catch {
+        await ctx.reply(VOICE_MESSAGES.EVALUATION_TEMPLATE(evaluation), {
+          reply_parameters: { message_id: ctx.message.message_id },
+        });
+      }
 
       // Clear the voice practice session data
       await sessionService.setSession(ctx, {

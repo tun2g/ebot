@@ -6,6 +6,7 @@ import { startCommand } from 'src/bot/commands/start/start.command';
 import { statsCommand } from 'src/bot/commands/stats/stats.command';
 import { topicCommand } from 'src/bot/commands/topic/topic.command';
 import { voiceCommand } from 'src/bot/commands/voice/voice.command';
+import { voiceActionHandler } from 'src/bot/handlers/voice.action-handler';
 import { BotContext } from 'src/bot/interface/context';
 import { learningMenuActionHandler } from 'src/bot/menus/learning/learning.action-handler';
 import { learningMenuHandler } from 'src/bot/menus/learning/learning.handler';
@@ -79,6 +80,7 @@ const actionHandlers = new Map<string | RegExp, (ctx: BotContext) => void>([
   ...mainMenuActionHandler.register(),
   ...learningMenuHandler.register(),
   ...learningMenuActionHandler.register(),
+  ...voiceActionHandler.register(),
 ]);
 
 // Register all actions (both string and regex patterns)
