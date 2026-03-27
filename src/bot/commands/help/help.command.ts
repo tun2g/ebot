@@ -25,20 +25,23 @@ export class HelpCommand {
   async onHelp(ctx: BotContext) {
     const helpMessage = `❓ *Help*
 
-*Available Commands:*
-/start \\- Start the bot and show welcome message
-/help \\- Show this help message
+*📚 Learning Commands:*
 /learning \\- Open the English learning menu
 /topic \\- Show current week topic
 /stats \\- Show your learning statistics
-/voice \\- Practice English pronunciation with voice
-/ask \\- Chat with the English assistant
-/done \\- End the current conversation
 
-*Features:*
-• *Commands* \\- Text commands starting with /
-• *Menus* \\- Interactive buttons for navigation
-• *Sessions* \\- Your interactions are saved
+*🎙️ Voice Practice:*
+/voice \\- Get a sentence and practice pronunciation
+_Reply to the sentence with a voice message to get evaluated_
+
+*💬 English Assistant:*
+/ask \\- Start a conversation with the English assistant
+/done \\- End the current conversation
+_Chat freely about grammar, vocabulary, or anything English\\!_
+
+*⚙️ General:*
+/start \\- Show welcome message
+/help \\- Show this help message
 
 *Navigation:*
 Use inline buttons to navigate through menus\\. Click "Back" buttons to return to previous screens\\.

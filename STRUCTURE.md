@@ -1,43 +1,74 @@
 ```
 src
 ├── bot
-│   ├── bot-message-handler.ts         // text message handler
-│   ├── commands                       // command handler
-│   │   ├── menu
-│   │   │   └── menu.command.ts
-│   │   ├── setup.ts
-│   │   └── start
-│   │       └── start.command.ts
+│   ├── bot-message-handler.ts         // text & voice message handler
+│   ├── commands                       // command handlers
+│   │   ├── dev
+│   │   │   └── dev.command.ts
+│   │   ├── help
+│   │   │   └── help.command.ts
+│   │   ├── learning
+│   │   │   └── learning.command.ts
+│   │   ├── setup.ts                   // register bot commands with Telegram
+│   │   ├── start
+│   │   │   └── start.command.ts
+│   │   ├── stats
+│   │   │   └── stats.command.ts
+│   │   ├── topic
+│   │   │   └── topic.command.ts
+│   │   └── voice
+│   │       └── voice.command.ts       // /voice pronunciation practice
 │   ├── constants
 │   │   ├── bot-description.ts
 │   │   ├── command.ts
 │   │   └── current-action.ts
-│   ├── index.ts                        // init bot, set up menu, message handler
+│   ├── handlers
+│   │   ├── topic-selection.handler.ts
+│   │   ├── vocabulary-response.handler.ts
+│   │   └── voice-response.handler.ts  // evaluate voice message pronunciation
+│   ├── helper
+│   │   └── process-request.helper.ts
+│   ├── index.ts                       // init bot, session, stage, middlewares
 │   ├── interface
-│   │   ├── context.ts
+│   │   ├── context.ts                 // BotContext (extends SceneContext)
 │   │   └── session.ts
 │   ├── menus
-│   │   └── game
-│   │       ├── game.action-handler.ts  // handle current action
-│   │       ├── game.button.ts          // common button used for menus
-│   │       ├── game.handler.ts         // click menu handler(click button on menu)
-│   │       ├── game.menu.ts            // menu UI
-│   │       └── game.resource.ts        // bot's reply message
-│   │
-│   └── middlewares
-│       ├── auth.middleware.ts          // auth middleware
-│       └── logger.middleware.ts        // logger middleware
+│   │   ├── learning
+│   │   │   ├── learning.action-handler.ts
+│   │   │   ├── learning.handler.ts
+│   │   │   └── learning.menu.ts
+│   │   └── main
+│   │       ├── main.action-handler.ts
+│   │       ├── main.handler.ts
+│   │       └── main.menu.ts
+│   ├── middlewares
+│   │   ├── auth.middleware.ts
+│   │   ├── logger.middleware.ts
+│   │   └── mention-check.middleware.ts
+│   ├── resources
+│   │   ├── ask-messages.ts            // /ask scene messages
+│   │   ├── learning-messages.ts
+│   │   ├── share.resource.ts
+│   │   └── voice-messages.ts          // /voice feature messages
+│   └── scenes
+│       └── ask
+│           └── ask.scene.ts           // /ask conversational scene
 ├── configs
-│   └── configuration.ts                // app configuration
-├── index.ts                            // main function
+│   └── configuration.ts
+├── index.ts                           // main entry point
 └── shared
     ├── logger
-    │   └── logger.ts                           // logger configuration
-    ├── services                                // share services
-    │   ├── callback-data-storage.service.ts    // store callback data in dynamic button
-    │   ├── redis.service.ts                    // redis service
-    │   ├── session.service.ts                  // session service
-    │   └── telegram-api.service.ts             // telegram api service
+    │   └── logger.ts
+    ├── services
+    │   ├── ai
+    │   │   ├── ai.interface.ts        // AI provider interface
+    │   │   ├── ai.service.ts          // AI service facade
+    │   │   ├── fuse.provider.ts       // Claude via Fuse API
+    │   │   └── gemini.provider.ts     // Google Gemini provider
+    │   ├── callback-data-storage.service.ts
+    │   ├── redis.service.ts
+    │   ├── session.service.ts
+    │   └── telegram-api.service.ts
     └── utils
-        └── index.ts                            // support functions
+        └── index.ts
 ```

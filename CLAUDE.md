@@ -111,17 +111,46 @@ To add a new action-based flow:
 2. Register handler in `BotMessageHandler.actionsMap`
 3. Set action via `sessionService.setSession(ctx, { currentAction: YOUR_ACTION })`
 
+### Scene Architecture
+
+For multi-step conversational flows, use Telegraf Scenes (`src/bot/scenes/`):
+
+1. Create a `Scenes.BaseScene<BotContext>` with handlers for `enter`, `on('text')`, `leave`, and `command('done')`
+2. Store scene-specific state in `ctx.scene.session` (managed by Telegraf's session middleware)
+3. Register the scene in the `Stage` in `src/bot/index.ts`
+4. Enter the scene via `ctx.scene.enter('scene-id')` from a command handler
+
+Example: `src/bot/scenes/ask/ask.scene.ts` — conversational English assistant
+
+**Key difference**: Custom Redis sessions (`sessionService`) are for persistent cross-feature state. Scene sessions (`ctx.scene.session`) are for in-memory, per-scene state that resets on leave.
+
+### Voice Practice Flow
+
+The `/voice` command uses a reply-based flow:
+
+1. Bot generates a sentence via AI → sends it to user
+2. User replies to that message with a voice/audio recording
+3. `bot-message-handler.ts` detects voice messages and dispatches to `voice-response.handler.ts`
+4. Handler downloads audio, sends to Gemini for transcription + pronunciation evaluation
+5. Bot replies with score breakdown (accuracy, fluency, intonation)
+
+**Note**: Voice evaluation only works with `AI_PROVIDER=gemini` (audio input not supported by Fuse/Claude).
+
 ### Middleware Order
 
 Middlewares execute in this order (defined in `src/bot/index.ts`):
 
 1. `loggerMiddleware` - Logs all interactions
-2. `bot.start()` - Handles /start specially
-3. Public commands (no auth)
-4. **`authMiddleware`** - Authentication boundary
-5. Private commands (requires auth)
-6. Message handlers (requires auth)
-7. Action handlers (requires auth)
+2. `mentionCheckMiddleware` - Filters group messages
+3. `session()` - Telegraf session middleware (required for scenes)
+4. `Stage` - Telegraf scene stage middleware
+5. `bot.start()` - Handles /start specially
+6. Public commands (no auth)
+7. **`authMiddleware`** - Authentication boundary
+8. Private commands (requires auth)
+9. Scene commands (`/ask`, `/done`)
+10. Message handlers (requires auth)
+11. Action handlers (requires auth)
 
 ### Configuration Management
 
