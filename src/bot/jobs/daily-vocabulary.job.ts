@@ -1,4 +1,5 @@
 import Bull from 'bull';
+import { VOCAB_PRONOUNCE_PREFIX } from 'src/bot/handlers/voice.action-handler';
 import { bot } from 'src/bot/index';
 import { formatVocabularyMessage } from 'src/bot/resources/learning-messages';
 import { groupService } from 'src/database/services/group.service';
@@ -6,6 +7,7 @@ import { vocabularyService } from 'src/database/services/vocabulary.service';
 import { weeklyTopicService } from 'src/database/services/weekly-topic.service';
 import logger from 'src/shared/logger/logger';
 import { aiService } from 'src/shared/services/ai/ai.service';
+import { Markup } from 'telegraf';
 
 export async function dailyVocabularyJob(_job: Bull.Job) {
   const startTime = new Date();
@@ -62,9 +64,12 @@ export async function dailyVocabularyJob(_job: Bull.Job) {
         // Format vocabulary message
         const message = formatVocabularyMessage(vocabularyData);
 
-        // Send message to group
+        // Send message to group with "Hear pronunciation" button
         const sentMessage = await bot.telegram.sendMessage(group.telegramGroupId, message, {
           parse_mode: 'Markdown',
+          ...Markup.inlineKeyboard([
+            Markup.button.callback('🔊 Hear pronunciation', `${VOCAB_PRONOUNCE_PREFIX}${vocabularyData.word}`),
+          ]),
         });
 
         // Update vocabulary with broadcast message ID for reply detection
