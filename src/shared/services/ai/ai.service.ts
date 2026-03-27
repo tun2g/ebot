@@ -41,6 +41,10 @@ class AIService {
   async evaluateVoicePronunciation(audioBuffer: Buffer, mimeType: string, expectedSentence: string) {
     return this.provider.evaluateVoicePronunciation(audioBuffer, mimeType, expectedSentence);
   }
+
+  async chat(messages: import('src/shared/services/ai/ai.interface').ChatMessage[]) {
+    return this.provider.chat(messages);
+  }
 }
 
 export const aiService = new AIService();

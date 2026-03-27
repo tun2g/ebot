@@ -34,6 +34,14 @@ export class SetUpBotCommand {
         command: 'voice',
         description: 'Practice English pronunciation with voice',
       },
+      {
+        command: 'ask',
+        description: 'Chat with the English assistant',
+      },
+      {
+        command: 'done',
+        description: 'End the current conversation',
+      },
     ];
   }
 

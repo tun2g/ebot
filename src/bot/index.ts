@@ -14,14 +14,22 @@ import { mainMenuHandler } from 'src/bot/menus/main/main.handler';
 import { authMiddleware } from 'src/bot/middlewares/auth.middleware';
 import { loggerMiddleware } from 'src/bot/middlewares/logger.middleware';
 import { mentionCheckMiddleware } from 'src/bot/middlewares/mention-check.middleware';
+import { ASK_SCENE_ID, askScene } from 'src/bot/scenes/ask/ask.scene';
 import { configService } from 'src/configs/configuration';
 import logger from 'src/shared/logger/logger';
-import { Telegraf } from 'telegraf';
+import { Scenes, session, Telegraf } from 'telegraf';
 
 const bot = new Telegraf<BotContext>(configService.botToken);
 
 bot.use(loggerMiddleware);
 bot.use(mentionCheckMiddleware);
+
+// Session middleware (required for scenes)
+bot.use(session());
+
+// Scene stage
+const stage = new Scenes.Stage<BotContext>([askScene]);
+bot.use(stage.middleware());
 
 bot.start(async (ctx) => {
   await startCommand.onStart(ctx);
@@ -49,6 +57,16 @@ const privateCommands: Map<string, (ctx: BotContext) => void> = new Map<string, 
 
 Array.from(privateCommands).forEach(([command, callback]) => {
   bot.command(command, callback);
+});
+
+// /ask - Enter the English assistant scene
+bot.command('ask', async (ctx) => {
+  await ctx.scene.enter(ASK_SCENE_ID);
+});
+
+// /done - Leave the current scene
+bot.command('done', async (ctx) => {
+  await ctx.scene.leave();
 });
 
 bot.on('message', async (ctx: BotContext) => {

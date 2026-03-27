@@ -2,6 +2,7 @@ import { configService } from 'src/configs/configuration';
 import logger from 'src/shared/logger/logger';
 import {
   AIProvider,
+  ChatMessage,
   EvaluationResult,
   VocabularyData,
   VoicePracticeResult,
@@ -280,5 +281,35 @@ JSON:`;
     _expectedSentence: string
   ): Promise<VoicePronunciationResult> {
     throw new Error('Voice feature is not supported with the Fuse provider. Please use AI_PROVIDER=gemini.');
+  }
+
+  async chat(messages: ChatMessage[]): Promise<string> {
+    try {
+      const systemPrompt = `You are a friendly and helpful English language assistant. Your role is to:
+- Help users practice and improve their English
+- Answer questions about English grammar, vocabulary, pronunciation, and usage
+- Correct mistakes gently and explain why
+- Provide examples and alternative ways to express ideas
+- Adapt your language level to the user's proficiency
+- Be encouraging and supportive
+- Keep responses concise but informative
+- If the user writes in Vietnamese, respond in a mix of English and Vietnamese to help them understand
+
+You are having a conversation. Respond naturally and helpfully.`;
+
+      const fuseMessages: FuseAPIMessage[] = [
+        { role: 'assistant', content: systemPrompt },
+        ...messages.map((msg) => ({
+          role: msg.role as 'user' | 'assistant',
+          content: msg.content,
+        })),
+      ];
+
+      return await this.callFuseAPI(fuseMessages, 0.7);
+    } catch (error) {
+      const errorMessage = this.parseError(error);
+      logger.error(`Error in chat: ${error}`);
+      throw new Error(errorMessage);
+    }
   }
 }

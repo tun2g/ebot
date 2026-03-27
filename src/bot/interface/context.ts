@@ -1,9 +1,12 @@
-import { Context } from 'telegraf';
-import { Update } from 'telegraf/types';
+import { Scenes } from 'telegraf';
+
+export interface BotSceneSession extends Scenes.SceneSessionData {
+  conversationHistory?: { role: 'user' | 'assistant'; content: string }[];
+}
 
 /**
- * Bot context interface extending Telegraf's Context
- * Note: Session is managed via Redis, not stored on context
- * Use sessionService.getSession(ctx) to retrieve session data
+ * Bot context interface extending Telegraf's SceneContext
+ * - ctx.scene.session.conversationHistory for scene-specific data
+ * - sessionService.getSession(ctx) for custom Redis session data
  */
-export type BotContext<U extends Update = Update> = Context<U>;
+export type BotContext = Scenes.SceneContext<BotSceneSession>;

@@ -32,6 +32,8 @@ export class HelpCommand {
 /topic \\- Show current week topic
 /stats \\- Show your learning statistics
 /voice \\- Practice English pronunciation with voice
+/ask \\- Chat with the English assistant
+/done \\- End the current conversation
 
 *Features:*
 • *Commands* \\- Text commands starting with /
