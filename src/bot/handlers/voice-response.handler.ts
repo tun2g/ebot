@@ -1,9 +1,11 @@
 import axios from 'axios';
 import { processRequestWithLoader } from 'src/bot/helper/process-request.helper';
 import { BotContext } from 'src/bot/interface/context';
+import { RATE_LIMIT_MESSAGES } from 'src/bot/resources/rate-limit-messages';
 import { VOICE_MESSAGES } from 'src/bot/resources/voice-messages';
 import logger from 'src/shared/logger/logger';
 import { aiService } from 'src/shared/services/ai/ai.service';
+import { rateLimitService } from 'src/shared/services/rate-limit.service';
 import { sessionService } from 'src/shared/services/session.service';
 
 export class VoiceResponseHandler {
@@ -41,6 +43,13 @@ export class VoiceResponseHandler {
       const replyToMessageId = ctx.message.reply_to_message.message_id;
       if (replyToMessageId !== session.voicePracticeMessageId) {
         return false;
+      }
+
+      // Rate limit check
+      const rateCheck = await rateLimitService.checkRateLimit(ctx.from.id, 'voice', 5, 60);
+      if (!rateCheck.allowed) {
+        await ctx.reply(RATE_LIMIT_MESSAGES.RATE_LIMITED(rateCheck.retryAfterSeconds), { parse_mode: 'Markdown' });
+        return true;
       }
 
       const expectedSentence = session.voicePracticeSentence;

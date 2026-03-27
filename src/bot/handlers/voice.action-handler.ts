@@ -3,6 +3,7 @@ import { processRequestWithLoader } from 'src/bot/helper/process-request.helper'
 import { BotContext } from 'src/bot/interface/context';
 import logger from 'src/shared/logger/logger';
 import { aiService } from 'src/shared/services/ai/ai.service';
+import { rateLimitService } from 'src/shared/services/rate-limit.service';
 import { redisService } from 'src/shared/services/redis.service';
 import { sessionService } from 'src/shared/services/session.service';
 
@@ -29,6 +30,13 @@ export class VoiceActionHandler {
    */
   private async onHearPronunciation(ctx: BotContext) {
     try {
+      // Rate limit check
+      const rateCheck = await rateLimitService.checkRateLimit(ctx.from!.id, 'voice_tts', 10, 60);
+      if (!rateCheck.allowed) {
+        await ctx.answerCbQuery('⏳ Too many requests. Please wait.');
+        return;
+      }
+
       const session = await sessionService.getSession(ctx);
       const sentence = session.voicePracticeSentence;
 
@@ -77,6 +85,13 @@ export class VoiceActionHandler {
    */
   private async onVocabPronunciation(ctx: BotContext) {
     try {
+      // Rate limit check
+      const rateCheck = await rateLimitService.checkRateLimit(ctx.from!.id, 'voice_tts', 10, 60);
+      if (!rateCheck.allowed) {
+        await ctx.answerCbQuery('⏳ Too many requests. Please wait.');
+        return;
+      }
+
       if (!ctx.callbackQuery || !('data' in ctx.callbackQuery)) {
         return;
       }

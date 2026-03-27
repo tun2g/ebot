@@ -1,9 +1,11 @@
 import { processRequestWithLoader } from 'src/bot/helper/process-request.helper';
 import { BotContext } from 'src/bot/interface/context';
 import { ASK_MESSAGES } from 'src/bot/resources/ask-messages';
+import { RATE_LIMIT_MESSAGES } from 'src/bot/resources/rate-limit-messages';
 import logger from 'src/shared/logger/logger';
 import { ChatMessage } from 'src/shared/services/ai/ai.interface';
 import { aiService } from 'src/shared/services/ai/ai.service';
+import { rateLimitService } from 'src/shared/services/rate-limit.service';
 import { Scenes } from 'telegraf';
 
 const MAX_HISTORY = 20;
@@ -31,6 +33,13 @@ askScene.on('text', async (ctx) => {
   // Don't process other commands inside the scene
   if (userMessage.startsWith('/')) {
     await ctx.reply('⚠️ Use /done to exit the conversation first, then use other commands.');
+    return;
+  }
+
+  // Rate limit check
+  const rateCheck = await rateLimitService.checkRateLimit(ctx.from!.id, 'ask', 10, 60);
+  if (!rateCheck.allowed) {
+    await ctx.reply(RATE_LIMIT_MESSAGES.RATE_LIMITED(rateCheck.retryAfterSeconds), { parse_mode: 'Markdown' });
     return;
   }
 

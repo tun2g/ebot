@@ -45,6 +45,14 @@ export class RedisService {
   expire(key: string, ttl: number) {
     return this.instance.expire(key, ttl);
   }
+
+  incr(key: string) {
+    return this.instance.incr(key);
+  }
+
+  ttl(key: string) {
+    return this.instance.ttl(key);
+  }
 }
 
 export const redisService = new RedisService();

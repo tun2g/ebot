@@ -1,8 +1,10 @@
 import { processRequestWithLoader } from 'src/bot/helper/process-request.helper';
 import { BotContext } from 'src/bot/interface/context';
+import { RATE_LIMIT_MESSAGES } from 'src/bot/resources/rate-limit-messages';
 import { VOICE_MESSAGES } from 'src/bot/resources/voice-messages';
 import logger from 'src/shared/logger/logger';
 import { aiService } from 'src/shared/services/ai/ai.service';
+import { rateLimitService } from 'src/shared/services/rate-limit.service';
 import { sessionService } from 'src/shared/services/session.service';
 import { Markup } from 'telegraf';
 
@@ -25,6 +27,13 @@ export class VoiceCommand {
 
   private async onVoice(ctx: BotContext) {
     try {
+      // Rate limit check
+      const rateCheck = await rateLimitService.checkRateLimit(ctx.from!.id, 'voice', 5, 60);
+      if (!rateCheck.allowed) {
+        await ctx.reply(RATE_LIMIT_MESSAGES.RATE_LIMITED(rateCheck.retryAfterSeconds), { parse_mode: 'Markdown' });
+        return;
+      }
+
       // Generate a sentence with loading animation
       const result = await processRequestWithLoader(
         ctx,
