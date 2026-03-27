@@ -2,6 +2,24 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.4] - 2026-03-27
+
+### Added
+
+- **On-demand TTS pronunciation guide**: "🔊 Hear pronunciation" inline button on `/voice` practice sentences
+  - Uses Gemini TTS (`gemini-2.5-flash-preview-tts`) to generate natural English speech
+  - Audio cached in session — subsequent clicks reuse the cached file
+- **Pronunciation button on daily vocabulary**: Each daily vocab message now includes a "🔊 Hear pronunciation" button
+  - Audio cached in Redis (24h TTL), shared across all users in the group
+- **`generateSpeech()` AI method**: New TTS endpoint added to AI provider interface, implemented in Gemini provider
+- **`voice.action-handler.ts`**: Dedicated action handler for voice-related callbacks (follows existing handler pattern)
+
+### Changed
+
+- Replaced static loading text in `/ask` and `/voice` with animated `processRequestWithLoader` progress bar
+- Voice evaluation results now have Markdown fallback for responses with special characters
+- Raw PCM audio from Gemini TTS is wrapped in a WAV header for proper playback in Telegram
+
 ## [1.0.3] - 2026-03-27
 
 ### Added

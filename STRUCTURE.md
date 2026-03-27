@@ -25,7 +25,8 @@ src
 │   ├── handlers
 │   │   ├── topic-selection.handler.ts
 │   │   ├── vocabulary-response.handler.ts
-│   │   └── voice-response.handler.ts  // evaluate voice message pronunciation
+│   │   ├── voice-response.handler.ts  // evaluate voice message pronunciation
+│   │   └── voice.action-handler.ts    // TTS pronunciation button callbacks
 │   ├── helper
 │   │   └── process-request.helper.ts
 │   ├── index.ts                       // init bot, session, stage, middlewares

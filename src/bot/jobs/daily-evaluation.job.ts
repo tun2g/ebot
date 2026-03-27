@@ -105,7 +105,7 @@ export async function dailyEvaluationJob(_job: Bull.Job) {
         const users = await userService.findUsersByTelegramIds(userIds);
         const userMap = new Map(users.map((u) => [u.telegramUserId, u]));
 
-        // Format leaderboard with usernames
+        // Format leaderboard and handle Telegram's 4096 char limit
         const leaderboardText = formatDailyEvaluationMessage({
           word: todayVocab?.word,
           topResponses: topResponses.map((r) => ({
@@ -118,10 +118,44 @@ export async function dailyEvaluationJob(_job: Bull.Job) {
           })),
         });
 
-        // Send leaderboard
-        await bot.telegram.sendMessage(targetGroup.telegramGroupId, leaderboardText, {
-          parse_mode: 'Markdown',
-        });
+        // Send leaderboard - split if message exceeds Telegram's 4096 char limit
+        if (leaderboardText.length <= 4096) {
+          try {
+            await bot.telegram.sendMessage(targetGroup.telegramGroupId, leaderboardText, {
+              parse_mode: 'Markdown',
+            });
+          } catch (sendError) {
+            // Fallback: send without Markdown if parsing fails
+            logger.warn(`[Evaluation] Markdown failed, sending plain text: ${sendError}`);
+            await bot.telegram.sendMessage(targetGroup.telegramGroupId, leaderboardText);
+          }
+        } else {
+          // Split: send header + individual evaluations
+          const headerText = `${
+            todayVocab?.word ? `📚 Word: **${todayVocab.word}**\n\n` : ''
+          }🏆 **Daily Evaluation Results**\n\n📊 All ${topResponses.length} responses have been evaluated!`;
+
+          await bot.telegram.sendMessage(targetGroup.telegramGroupId, headerText, {
+            parse_mode: 'Markdown',
+          });
+
+          for (const [index, r] of topResponses.entries()) {
+            const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : '🏅';
+            const username = userService.getDisplayName(userMap.get(r.userId) || null, r.userId);
+            const entryText = `${medal} ${username}: ${r.score}/10 points\n📝 "${r.sentence}"\n📖 Grammar (${r.breakdown.grammar.score}/4): ${r.breakdown.grammar.comment}\n💬 Usage (${r.breakdown.usage.score}/3): ${r.breakdown.usage.comment}\n⭐ Complexity (${r.breakdown.complexity.score}/3): ${r.breakdown.complexity.comment}\n💡 Overall: ${r.feedback}`;
+
+            try {
+              await bot.telegram.sendMessage(targetGroup.telegramGroupId, entryText, {
+                parse_mode: 'Markdown',
+              });
+            } catch {
+              // Fallback without Markdown
+              await bot.telegram.sendMessage(targetGroup.telegramGroupId, entryText);
+            }
+          }
+
+          await bot.telegram.sendMessage(targetGroup.telegramGroupId, '💪 Keep up the great work!');
+        }
 
         logger.info(`Sent daily leaderboard to group ${targetGroup.telegramGroupId}`);
 
