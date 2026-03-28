@@ -2,6 +2,37 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.6] - 2026-03-29
+
+### Added
+
+- **Roleplay Practice (`/roleplay`)**: Practice real-life English conversations with an AI character
+
+  - 6 built-in scenarios: restaurant, job interview, doctor, airport, hotel, shopping
+  - Custom scenario support — type any situation you want to practice
+  - Random scenario picker
+  - Voice input support — send voice messages during roleplay, bot transcribes and responds in character
+  - Language feedback on every message (grammar, vocabulary, naturalness corrections)
+  - Multi-turn conversation with history tracking (up to 20 messages)
+  - Rate limited (10 messages per 60 seconds)
+
+- **Shadow Practice (`/shadow`)**: Listen-and-repeat pronunciation training focused on rhythm and connected speech
+
+  - Bot generates a sentence, creates native TTS audio, and sends both
+  - User listens to audio, then records their own voice to mimic it
+  - AI evaluates on 4 dimensions (each scored 0-10): Accuracy, Rhythm, Connected Speech, Stress & Intonation
+  - Detailed per-category feedback with actionable tips
+  - Addresses common Vietnamese speaker patterns (syllable-timed speech, word separation)
+  - Rate limited (5 requests per 60 seconds)
+
+- **AI provider methods**: `roleplayChat()` and `evaluateShadowing()` added to AI interface, Gemini, and Fuse providers
+- **Request timeout**: `processRequestWithLoader` now times out after 2 minutes, preventing infinite loading animations
+
+### Changed
+
+- `/help` command updated with new Shadow Practice and Roleplay Practice sections
+- `STRUCTURE.md` updated to reflect new files and directories
+
 ## [1.0.5] - 2026-03-29
 
 ### Added
