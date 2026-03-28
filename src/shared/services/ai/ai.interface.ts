@@ -18,6 +18,7 @@ export interface EvaluationResult {
 
 export interface VoicePracticeResult {
   sentence: string;
+  pronunciation: string; // IPA pronunciation of the sentence
   tip: string; // A pronunciation tip or context for the sentence
 }
 

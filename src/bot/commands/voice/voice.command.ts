@@ -42,10 +42,13 @@ export class VoiceCommand {
       );
 
       // Send the sentence with instructions + "Hear pronunciation" button
-      const sentenceMessage = await ctx.reply(VOICE_MESSAGES.SENTENCE_TEMPLATE(result.sentence, result.tip), {
-        parse_mode: 'Markdown',
-        ...Markup.inlineKeyboard([Markup.button.callback('🔊 Hear pronunciation', VOICE_HEAR_CALLBACK)]),
-      });
+      const sentenceMessage = await ctx.reply(
+        VOICE_MESSAGES.SENTENCE_TEMPLATE(result.sentence, result.pronunciation, result.tip),
+        {
+          parse_mode: 'Markdown',
+          ...Markup.inlineKeyboard([Markup.button.callback('🔊 Hear pronunciation', VOICE_HEAR_CALLBACK)]),
+        }
+      );
 
       // Store the sentence and message ID in session for the voice response handler
       await sessionService.setSession(ctx, {

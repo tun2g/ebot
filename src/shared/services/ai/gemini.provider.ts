@@ -219,11 +219,13 @@ Requirements:
 - Use natural, conversational English
 - Include a mix of common and slightly challenging pronunciation patterns (e.g., th, r/l, vowel sounds, consonant clusters)
 - ${topicInstruction}
+- Provide the IPA (International Phonetic Alphabet) pronunciation of the full sentence
 - Provide a brief pronunciation tip for the sentence
 
 Return ONLY a JSON object with this exact structure:
 {
   "sentence": "The weather forecast predicts thunderstorms throughout the entire weekend.",
+  "pronunciation": "/ðə ˈwɛðər ˈfɔːrkæst prɪˈdɪkts ˈθʌndərˌstɔːrmz θruːˈaʊt ði ɪnˈtaɪər ˈwiːkˌɛnd/",
   "tip": "Pay attention to the 'th' sounds in 'the', 'weather', 'thunderstorms', and 'throughout'. Place your tongue between your teeth."
 }
 

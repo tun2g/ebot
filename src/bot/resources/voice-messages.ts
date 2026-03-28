@@ -1,10 +1,11 @@
 export const VOICE_MESSAGES = {
   GENERATING: '🎙️ *Voice Practice*\n\n⏳ Generating a sentence for you to practice...',
 
-  SENTENCE_TEMPLATE: (sentence: string, tip: string) =>
+  SENTENCE_TEMPLATE: (sentence: string, pronunciation: string, tip: string) =>
     `🎙️ *Voice Practice*\n\n` +
     `📝 *Read this sentence aloud:*\n` +
-    `\`${sentence}\`\n\n` +
+    `\`${sentence}\`\n` +
+    `🔤 ${pronunciation}\n\n` +
     `💡 *Tip:* ${tip}\n\n` +
     `🎤 _Reply to this message with a voice message to get your pronunciation evaluated!_`,
 
