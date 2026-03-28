@@ -35,8 +35,16 @@ export class SetUpBotCommand {
         description: 'Practice English pronunciation with voice',
       },
       {
+        command: 'shadow',
+        description: 'Shadowing practice - listen and repeat',
+      },
+      {
         command: 'ask',
         description: 'Chat with the English assistant',
+      },
+      {
+        command: 'roleplay',
+        description: 'Practice conversations with roleplay scenarios',
       },
       {
         command: 'done',

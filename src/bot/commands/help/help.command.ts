@@ -34,6 +34,14 @@ export class HelpCommand {
 /voice \\- Get a sentence and practice pronunciation
 _Reply to the sentence with a voice message to get evaluated_
 
+*🔁 Shadow Practice:*
+/shadow \\- Listen to a native sentence, then repeat it
+_Focuses on rhythm, connected speech, and natural intonation_
+
+*🎭 Roleplay Practice:*
+/roleplay \\- Practice real\\-life English conversations
+_Choose a scenario and chat with an AI character\\!_
+
 *💬 English Assistant:*
 /ask \\- Start a conversation with the English assistant
 /done \\- End the current conversation

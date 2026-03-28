@@ -1,4 +1,5 @@
 import { CurrentAction } from 'src/bot/constants/current-action';
+import { shadowResponseHandler } from 'src/bot/handlers/shadow-response.handler';
 import { topicSelectionHandler } from 'src/bot/handlers/topic-selection.handler';
 import { vocabularyResponseHandler } from 'src/bot/handlers/vocabulary-response.handler';
 import { voiceResponseHandler } from 'src/bot/handlers/voice-response.handler';
@@ -22,8 +23,11 @@ export class BotMessageHandler {
   }
 
   async process(ctx: BotContext) {
-    // Handle voice/audio messages first (for voice practice)
+    // Handle voice/audio messages first (for voice practice and shadow practice)
     if (ctx.message && ('voice' in ctx.message || 'audio' in ctx.message)) {
+      const shadowHandled = await shadowResponseHandler.handle(ctx);
+      if (shadowHandled) return;
+
       const voiceHandled = await voiceResponseHandler.handle(ctx);
       if (voiceHandled) return;
     }

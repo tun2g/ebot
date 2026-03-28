@@ -6,6 +6,8 @@ export interface BotSession {
   voicePracticeSentence?: string;
   voicePracticeMessageId?: number;
   voicePracticeAudioFileId?: string;
+  shadowPracticeSentence?: string;
+  shadowPracticeMessageId?: number;
 }
 
 export const defaultSession: BotSession = {
@@ -13,4 +15,6 @@ export const defaultSession: BotSession = {
   voicePracticeSentence: undefined,
   voicePracticeMessageId: undefined,
   voicePracticeAudioFileId: undefined,
+  shadowPracticeSentence: undefined,
+  shadowPracticeMessageId: undefined,
 };

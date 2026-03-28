@@ -2,6 +2,7 @@ import { botMessageHandler } from 'src/bot/bot-message-handler';
 import { devCommand } from 'src/bot/commands/dev/dev.command';
 import { helpCommand } from 'src/bot/commands/help/help.command';
 import { learningCommand } from 'src/bot/commands/learning/learning.command';
+import { shadowCommand } from 'src/bot/commands/shadow/shadow.command';
 import { startCommand } from 'src/bot/commands/start/start.command';
 import { statsCommand } from 'src/bot/commands/stats/stats.command';
 import { topicCommand } from 'src/bot/commands/topic/topic.command';
@@ -16,6 +17,7 @@ import { authMiddleware } from 'src/bot/middlewares/auth.middleware';
 import { loggerMiddleware } from 'src/bot/middlewares/logger.middleware';
 import { mentionCheckMiddleware } from 'src/bot/middlewares/mention-check.middleware';
 import { ASK_SCENE_ID, askScene } from 'src/bot/scenes/ask/ask.scene';
+import { ROLEPLAY_SCENE_ID, roleplayScene } from 'src/bot/scenes/roleplay/roleplay.scene';
 import { configService } from 'src/configs/configuration';
 import logger from 'src/shared/logger/logger';
 import { Scenes, session, Telegraf } from 'telegraf';
@@ -29,7 +31,7 @@ bot.use(mentionCheckMiddleware);
 bot.use(session());
 
 // Scene stage
-const stage = new Scenes.Stage<BotContext>([askScene]);
+const stage = new Scenes.Stage<BotContext>([askScene, roleplayScene]);
 bot.use(stage.middleware());
 
 bot.start(async (ctx) => {
@@ -54,6 +56,7 @@ const privateCommands: Map<string, (ctx: BotContext) => void> = new Map<string, 
   ...statsCommand.register(),
   ...devCommand.register(),
   ...voiceCommand.register(),
+  ...shadowCommand.register(),
 ]);
 
 Array.from(privateCommands).forEach(([command, callback]) => {
@@ -63,6 +66,11 @@ Array.from(privateCommands).forEach(([command, callback]) => {
 // /ask - Enter the English assistant scene
 bot.command('ask', async (ctx) => {
   await ctx.scene.enter(ASK_SCENE_ID);
+});
+
+// /roleplay - Enter the roleplay practice scene
+bot.command('roleplay', async (ctx) => {
+  await ctx.scene.enter(ROLEPLAY_SCENE_ID);
 });
 
 // /done - Leave the current scene

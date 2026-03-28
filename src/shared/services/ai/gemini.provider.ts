@@ -5,6 +5,8 @@ import {
   AIProvider,
   ChatMessage,
   EvaluationResult,
+  RoleplayResponse,
+  ShadowEvaluationResult,
   VocabularyData,
   VoicePracticeResult,
   VoicePronunciationResult,
@@ -373,6 +375,185 @@ You are having a conversation. Respond naturally and helpfully.`;
     } catch (error) {
       const errorMessage = this.parseError(error);
       logger.error(`Error in chat: ${error}`);
+      throw new Error(errorMessage);
+    }
+  }
+
+  async roleplayChat(scenario: string, messages: ChatMessage[]): Promise<RoleplayResponse> {
+    try {
+      const systemPrompt = `You are a roleplay partner for English practice. You are playing a character in the following scenario: "${scenario}".
+
+Your rules:
+- Stay in character and respond naturally as the character in the scenario
+- After receiving the user's message, provide TWO things in your response:
+  1. Language feedback: Point out any grammar, vocabulary, or naturalness issues in the user's message. Be specific and helpful. If the message is perfect, say so briefly.
+  2. In-character reply: Continue the conversation as your character, asking follow-up questions or responding naturally to keep the dialogue going.
+
+- Keep your in-character replies conversational and at an intermediate English level
+- If the user's message is the very first one (empty or just a greeting), generate the opening line of the scenario as your character
+- Use natural, everyday English appropriate for the scenario
+
+Return ONLY a JSON object with this exact structure:
+{
+  "languageFeedback": "Your specific feedback on the user's English...",
+  "reply": "Your in-character response continuing the conversation..."
+}
+
+JSON:`;
+
+      const contents = messages.map((msg) => ({
+        role: msg.role === 'user' ? ('user' as const) : ('model' as const),
+        parts: [{ text: msg.content }],
+      }));
+
+      const result = await this.model.generateContent({
+        contents,
+        systemInstruction: { role: 'user' as const, parts: [{ text: systemPrompt }] },
+      });
+
+      const response = result.response;
+      const text = response.text();
+
+      const jsonMatch = text.match(/\{[\s\S]*\}/);
+      if (!jsonMatch) {
+        logger.error('Failed to parse AI response for roleplay');
+        throw new Error('AI service error: Failed to parse response');
+      }
+
+      return JSON.parse(jsonMatch[0]);
+    } catch (error) {
+      const errorMessage = this.parseError(error);
+      logger.error(`Error in roleplay chat: ${error}`);
+      throw new Error(errorMessage);
+    }
+  }
+
+  async evaluateShadowing(
+    audioBuffer: Buffer,
+    mimeType: string,
+    expectedSentence: string
+  ): Promise<ShadowEvaluationResult> {
+    try {
+      const audioBase64 = audioBuffer.toString('base64');
+
+      const prompt = `You are a friendly English pronunciation coach specializing in shadowing practice. The user listened to a native speaker say a sentence, then immediately tried to repeat it, mimicking the rhythm and intonation.
+
+The expected sentence was:
+"${expectedSentence}"
+
+Listen to the recording and evaluate the SHADOWING performance. Focus especially on rhythm and connected speech, not just word accuracy.
+
+IMPORTANT: In all your comments and feedback, address the user directly using "you/your" (e.g., "You matched the rhythm well" NOT "The student matched the rhythm well"). Be encouraging and specific.
+
+Evaluate based on (each scored 0-10):
+1. Accuracy (0-10): How closely the spoken words match the expected sentence. 10 = perfect match, 0 = completely different.
+2. Rhythm (0-10): Did you match the natural pace and timing? Are stressed/unstressed syllables appropriately timed? Vietnamese speakers tend to give equal time to every syllable — check for this.
+3. Connected Speech (0-10): Did you link words naturally? Look for proper linking (e.g., "an_apple"), reductions (e.g., "gonna", "wanna"), and elisions. Vietnamese speakers often separate every word — check for this.
+4. Stress & Intonation (0-10): Are content words stressed and function words reduced? Is the intonation pattern natural (rising for questions, falling for statements)?
+
+For each category, provide:
+- The score (0-10)
+- A concise, specific comment in English (1-2 sentences), addressing the user as "you"
+
+Also provide:
+- Overall score (0-10, rounded average of all 4 breakdown scores)
+- Overall feedback in English (2-3 sentences with actionable tips), addressing the user as "you"
+
+Return ONLY a JSON object with this exact structure:
+{
+  "transcription": "what you actually heard",
+  "score": 7,
+  "feedback": "You did a great job with... Try to...",
+  "breakdown": {
+    "accuracy": { "score": 8, "comment": "You accurately reproduced..." },
+    "rhythm": { "score": 6, "comment": "Your rhythm was..." },
+    "connectedSpeech": { "score": 5, "comment": "You could improve linking in..." },
+    "stressIntonation": { "score": 7, "comment": "Your stress patterns were..." }
+  }
+}
+
+JSON:`;
+
+      const result = await this.model.generateContent({
+        contents: [
+          {
+            role: 'user',
+            parts: [
+              {
+                inlineData: {
+                  mimeType,
+                  data: audioBase64,
+                },
+              },
+              { text: prompt },
+            ],
+          },
+        ],
+        generationConfig: {
+          temperature: 0,
+        },
+      });
+
+      const response = result.response;
+      let text: string;
+      try {
+        text = response.text();
+      } catch (parseErr) {
+        logger.error(`[Shadow] response.text() threw: ${parseErr}`);
+        logger.error(
+          `[Shadow] Response candidates: ${JSON.stringify(
+            response.candidates?.map((c) => ({ finishReason: c.finishReason, safetyRatings: c.safetyRatings }))
+          )}`
+        );
+        throw new Error('AI service error: Empty or blocked response');
+      }
+
+      if (!text || text.trim().length === 0) {
+        logger.error(
+          `[Shadow] Empty response text. Candidates: ${JSON.stringify(
+            response.candidates?.map((c) => ({ finishReason: c.finishReason }))
+          )}`
+        );
+        throw new Error('AI service error: Empty response');
+      }
+
+      logger.info(`[Shadow] Raw AI response (${text.length} chars): ${text.substring(0, 500)}`);
+
+      // Try to extract JSON - strip markdown code fences if present
+      const cleanedText = text.replace(/```(?:json)?\s*/g, '').replace(/```/g, '');
+      const jsonMatch = cleanedText.match(/\{[\s\S]*\}/);
+      if (!jsonMatch) {
+        logger.error(`[Shadow] Failed to parse AI response. Full response: ${text}`);
+        throw new Error('AI service error: Failed to parse response');
+      }
+
+      const evaluation = JSON.parse(jsonMatch[0]);
+
+      // Validate scores (0-10 per section)
+      evaluation.breakdown.accuracy.score = Math.min(10, Math.max(0, evaluation.breakdown.accuracy.score));
+      evaluation.breakdown.rhythm.score = Math.min(10, Math.max(0, evaluation.breakdown.rhythm.score));
+      evaluation.breakdown.connectedSpeech.score = Math.min(
+        10,
+        Math.max(0, evaluation.breakdown.connectedSpeech.score)
+      );
+      evaluation.breakdown.stressIntonation.score = Math.min(
+        10,
+        Math.max(0, evaluation.breakdown.stressIntonation.score)
+      );
+
+      // Recalculate overall as rounded average
+      evaluation.score = Math.round(
+        (evaluation.breakdown.accuracy.score +
+          evaluation.breakdown.rhythm.score +
+          evaluation.breakdown.connectedSpeech.score +
+          evaluation.breakdown.stressIntonation.score) /
+          4
+      );
+
+      return evaluation;
+    } catch (error) {
+      const errorMessage = this.parseError(error);
+      logger.error(`Error evaluating shadowing: ${error}`);
       throw new Error(errorMessage);
     }
   }

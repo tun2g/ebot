@@ -10,6 +10,8 @@ src
 │   │   ├── learning
 │   │   │   └── learning.command.ts
 │   │   ├── setup.ts                   // register bot commands with Telegram
+│   │   ├── shadow
+│   │   │   └── shadow.command.ts      // /shadow shadowing practice
 │   │   ├── start
 │   │   │   └── start.command.ts
 │   │   ├── stats
@@ -23,6 +25,7 @@ src
 │   │   ├── command.ts
 │   │   └── current-action.ts
 │   ├── handlers
+│   │   ├── shadow-response.handler.ts // evaluate shadow voice replies
 │   │   ├── topic-selection.handler.ts
 │   │   ├── vocabulary-response.handler.ts
 │   │   ├── voice-response.handler.ts  // evaluate voice message pronunciation
@@ -56,11 +59,15 @@ src
 │   │   ├── ask-messages.ts            // /ask scene messages
 │   │   ├── learning-messages.ts
 │   │   ├── rate-limit-messages.ts     // rate limit user-facing messages
+│   │   ├── roleplay-messages.ts       // /roleplay scenario messages
+│   │   ├── shadow-messages.ts         // /shadow feature messages
 │   │   ├── share.resource.ts
 │   │   └── voice-messages.ts          // /voice feature messages
 │   ├── scenes
-│   │   └── ask
-│   │       └── ask.scene.ts           // /ask conversational scene
+│   │   ├── ask
+│   │   │   └── ask.scene.ts           // /ask conversational scene
+│   │   └── roleplay
+│   │       └── roleplay.scene.ts      // /roleplay scenario scene
 │   └── utils
 │       └── send-vocabulary.util.ts    // shared vocab generation & sending
 ├── configs

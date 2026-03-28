@@ -4,6 +4,8 @@ import {
   AIProvider,
   ChatMessage,
   EvaluationResult,
+  RoleplayResponse,
+  ShadowEvaluationResult,
   VocabularyData,
   VoicePracticeResult,
   VoicePronunciationResult,
@@ -315,5 +317,59 @@ You are having a conversation. Respond naturally and helpfully.`;
 
   async generateSpeech(_text: string): Promise<Buffer> {
     throw new Error('Speech generation is not supported with the Fuse provider. Please use AI_PROVIDER=gemini.');
+  }
+
+  async roleplayChat(scenario: string, messages: ChatMessage[]): Promise<RoleplayResponse> {
+    try {
+      const systemPrompt = `You are a roleplay partner for English practice. You are playing a character in the following scenario: "${scenario}".
+
+Your rules:
+- Stay in character and respond naturally as the character in the scenario
+- After receiving the user's message, provide TWO things in your response:
+  1. Language feedback: Point out any grammar, vocabulary, or naturalness issues in the user's message. Be specific and helpful. If the message is perfect, say so briefly.
+  2. In-character reply: Continue the conversation as your character, asking follow-up questions or responding naturally to keep the dialogue going.
+
+- Keep your in-character replies conversational and at an intermediate English level
+- If the user's message is the very first one (empty or just a greeting), generate the opening line of the scenario as your character
+- Use natural, everyday English appropriate for the scenario
+
+Return ONLY a JSON object with this exact structure:
+{
+  "languageFeedback": "Your specific feedback on the user's English...",
+  "reply": "Your in-character response continuing the conversation..."
+}
+
+JSON:`;
+
+      const fuseMessages: FuseAPIMessage[] = [
+        { role: 'assistant', content: systemPrompt },
+        ...messages.map((msg) => ({
+          role: msg.role as 'user' | 'assistant',
+          content: msg.content,
+        })),
+      ];
+
+      const responseText = await this.callFuseAPI(fuseMessages, 0.7);
+
+      const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+      if (!jsonMatch) {
+        logger.error('Failed to parse AI response for roleplay');
+        throw new Error('AI service error: Failed to parse response');
+      }
+
+      return JSON.parse(jsonMatch[0]);
+    } catch (error) {
+      const errorMessage = this.parseError(error);
+      logger.error(`Error in roleplay chat: ${error}`);
+      throw new Error(errorMessage);
+    }
+  }
+
+  async evaluateShadowing(
+    _audioBuffer: Buffer,
+    _mimeType: string,
+    _expectedSentence: string
+  ): Promise<ShadowEvaluationResult> {
+    throw new Error('Shadow practice is not supported with the Fuse provider. Please use AI_PROVIDER=gemini.');
   }
 }

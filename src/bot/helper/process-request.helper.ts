@@ -47,6 +47,9 @@ function getRandomMode(): LoaderMode {
   return Math.random() < 0.5 ? 'progress' : 'emoji';
 }
 
+const TIMEOUT_MS = 2 * 60 * 1000; // 2 minutes
+const TIMEOUT_MESSAGE = '⏱️ Request timed out. The server took too long to respond. Please try again later.';
+
 /**
  *
  * @param ctx
@@ -109,8 +112,16 @@ const processRequestWithLoader = async <T>(
     }
   }, 1000);
 
+  // Create a timeout promise that rejects after TIMEOUT_MS
+  const timeoutPromise = new Promise<never>((_resolve, reject) => {
+    setTimeout(() => {
+      reject(new Error('REQUEST_TIMEOUT'));
+    }, TIMEOUT_MS);
+  });
+
   try {
-    const result = await request;
+    // Race the actual request against the timeout
+    const result = await Promise.race([request, timeoutPromise]);
     clearInterval(interval);
 
     // Quickly animate to 100% completion before deleting
@@ -130,7 +141,17 @@ const processRequestWithLoader = async <T>(
     return result as T;
   } catch (error) {
     clearInterval(interval);
-    await ctx.telegram.editMessageText(chatId, messageId, undefined, shareResource.ERROR_REQUEST, undefined);
+
+    // Show timeout-specific message
+    const isTimeout = error instanceof Error && error.message === 'REQUEST_TIMEOUT';
+    const errorText = isTimeout ? TIMEOUT_MESSAGE : shareResource.ERROR_REQUEST;
+
+    try {
+      await ctx.telegram.editMessageText(chatId, messageId, undefined, errorText, undefined);
+    } catch {
+      // Ignore errors during error display
+    }
+
     throw error;
   }
 };

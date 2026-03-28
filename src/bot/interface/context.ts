@@ -2,6 +2,8 @@ import { Scenes } from 'telegraf';
 
 export interface BotSceneSession extends Scenes.SceneSessionData {
   conversationHistory?: { role: 'user' | 'assistant'; content: string }[];
+  roleplayScenario?: string;
+  roleplayWaitingCustom?: boolean;
 }
 
 /**

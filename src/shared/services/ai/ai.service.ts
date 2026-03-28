@@ -49,6 +49,14 @@ class AIService {
   async generateSpeech(text: string) {
     return this.provider.generateSpeech(text);
   }
+
+  async roleplayChat(scenario: string, messages: import('src/shared/services/ai/ai.interface').ChatMessage[]) {
+    return this.provider.roleplayChat(scenario, messages);
+  }
+
+  async evaluateShadowing(audioBuffer: Buffer, mimeType: string, expectedSentence: string) {
+    return this.provider.evaluateShadowing(audioBuffer, mimeType, expectedSentence);
+  }
 }
 
 export const aiService = new AIService();

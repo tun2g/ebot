@@ -38,6 +38,23 @@ export interface ChatMessage {
   content: string;
 }
 
+export interface RoleplayResponse {
+  languageFeedback: string; // Grammar/vocab corrections on user's input
+  reply: string; // In-character response continuing the dialogue
+}
+
+export interface ShadowEvaluationResult {
+  transcription: string; // What the AI heard
+  score: number; // 0-10 overall (average of breakdown)
+  feedback: string; // Overall summary
+  breakdown: {
+    accuracy: { score: number; comment: string }; // 0-10
+    rhythm: { score: number; comment: string }; // 0-10 (speed/timing match)
+    connectedSpeech: { score: number; comment: string }; // 0-10 (linking, reduction)
+    stressIntonation: { score: number; comment: string }; // 0-10 (stress patterns)
+  };
+}
+
 export interface AIProvider {
   generateTopicSuggestions(previousTopics: string[], count: number): Promise<string[]>;
   generateVocabulary(topic: string, previousWords: string[]): Promise<VocabularyData>;
@@ -50,4 +67,6 @@ export interface AIProvider {
   ): Promise<VoicePronunciationResult>;
   chat(messages: ChatMessage[]): Promise<string>;
   generateSpeech(text: string): Promise<Buffer>;
+  roleplayChat(scenario: string, messages: ChatMessage[]): Promise<RoleplayResponse>;
+  evaluateShadowing(audioBuffer: Buffer, mimeType: string, expectedSentence: string): Promise<ShadowEvaluationResult>;
 }
