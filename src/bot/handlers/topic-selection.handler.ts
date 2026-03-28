@@ -1,5 +1,6 @@
 import { BotContext } from 'src/bot/interface/context';
 import { formatTopicSelectedMessage, MESSAGES } from 'src/bot/resources/learning-messages';
+import { sendVocabularyToGroup } from 'src/bot/utils/send-vocabulary.util';
 import { WeeklyTopicStatus } from 'src/database/models/weekly-topic.model';
 import { groupService } from 'src/database/services/group.service';
 import { weeklyTopicService } from 'src/database/services/weekly-topic.service';
@@ -94,12 +95,22 @@ export class TopicSelectionHandler {
 
       // Send confirmation
       const selectedBy = `@${ctx.from.username || ctx.from.first_name}`;
-      const message = formatTopicSelectedMessage(selectedTopicName, selectedBy, 'tomorrow at 9 AM');
+      const isMonday = new Date().getDay() === 1;
+      const startTimeText = isMonday ? 'shortly' : 'tomorrow at 9 AM';
+      const message = formatTopicSelectedMessage(selectedTopicName, selectedBy, startTimeText);
       await ctx.reply(message, { parse_mode: 'Markdown' });
 
       logger.info(
         `[TopicSelection] Topic selection completed successfully - GroupID: ${group._id}, TopicID: ${pendingTopic._id}, TopicName: "${selectedTopicName}", SelectedBy: ${ctx.from.id} (${selectedBy})`
       );
+
+      // On Monday, immediately send the first vocabulary word
+      if (isMonday) {
+        logger.info(
+          `[TopicSelection] Monday detected - sending first vocabulary immediately for group ${group.telegramGroupId}`
+        );
+        await sendVocabularyToGroup(group._id, group.telegramGroupId, pendingTopic._id, selectedTopicName);
+      }
 
       return true;
     } catch (error) {

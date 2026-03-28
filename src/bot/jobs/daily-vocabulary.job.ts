@@ -1,13 +1,8 @@
 import Bull from 'bull';
-import { VOCAB_PRONOUNCE_PREFIX } from 'src/bot/handlers/voice.action-handler';
-import { bot } from 'src/bot/index';
-import { formatVocabularyMessage } from 'src/bot/resources/learning-messages';
+import { sendVocabularyToGroup } from 'src/bot/utils/send-vocabulary.util';
 import { groupService } from 'src/database/services/group.service';
-import { vocabularyService } from 'src/database/services/vocabulary.service';
 import { weeklyTopicService } from 'src/database/services/weekly-topic.service';
 import logger from 'src/shared/logger/logger';
-import { aiService } from 'src/shared/services/ai/ai.service';
-import { Markup } from 'telegraf';
 
 export async function dailyVocabularyJob(_job: Bull.Job) {
   const startTime = new Date();
@@ -20,6 +15,7 @@ export async function dailyVocabularyJob(_job: Bull.Job) {
     const dayOfWeek = today.getDay(); // 0 = Sunday, 1 = Monday, etc.
 
     // Only run Tuesday through Sunday (not Monday, as that's topic selection day)
+    // Monday vocabulary is sent immediately after topic selection instead
     if (dayOfWeek === 1) {
       logger.info('Skipping vocabulary broadcast on Monday (topic selection day)');
       return;
@@ -38,46 +34,7 @@ export async function dailyVocabularyJob(_job: Bull.Job) {
           continue;
         }
 
-        // Get previous words for this topic
-        const previousWords = await vocabularyService.getPreviousWordsForTopic(activeTopic._id);
-
-        // Generate vocabulary using AI
-        const vocabularyData = await aiService.generateVocabulary(activeTopic.topicName, previousWords);
-
-        // Save vocabulary to database
-        const vocabulary = await vocabularyService.createVocabulary({
-          topicId: activeTopic._id,
-          groupId: group._id,
-          word: vocabularyData.word,
-          vietnameseMeaning: vocabularyData.vietnameseMeaning,
-          englishSynonyms: vocabularyData.englishSynonyms,
-          pronunciation: vocabularyData.pronunciation,
-          exampleUsages: vocabularyData.exampleUsages,
-          broadcastDate: new Date(),
-        });
-
-        if (!vocabulary) {
-          logger.error(`Failed to create vocabulary for group ${group.telegramGroupId}`);
-          continue;
-        }
-
-        // Format vocabulary message
-        const message = formatVocabularyMessage(vocabularyData);
-
-        // Send message to group with "Hear pronunciation" button
-        const sentMessage = await bot.telegram.sendMessage(group.telegramGroupId, message, {
-          parse_mode: 'Markdown',
-          ...Markup.inlineKeyboard([
-            Markup.button.callback('🔊 Hear pronunciation', `${VOCAB_PRONOUNCE_PREFIX}${vocabularyData.word}`),
-          ]),
-        });
-
-        // Update vocabulary with broadcast message ID for reply detection
-        await vocabularyService.updateBroadcastMessageId(vocabulary._id, sentMessage.message_id);
-
-        logger.info(
-          `Vocabulary broadcast sent to group ${group.telegramGroupId}, word: ${vocabularyData.word}, message ID: ${sentMessage.message_id}`
-        );
+        await sendVocabularyToGroup(group._id, group.telegramGroupId, activeTopic._id, activeTopic.topicName);
       } catch (error) {
         logger.error(`Error broadcasting vocabulary to group ${group.telegramGroupId}: ${error}`);
       }

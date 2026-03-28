@@ -115,6 +115,18 @@ export class GroupService {
   }
 
   /**
+   * Find group by MongoDB ID
+   */
+  async findGroupById(groupId: mongoose.Types.ObjectId): Promise<IGroup | null> {
+    try {
+      return await Group.findById(groupId);
+    } catch (error) {
+      logger.error(`[GroupService] Error in findGroupById - GroupID: ${groupId}, Error: ${error}`);
+      return null;
+    }
+  }
+
+  /**
    * Find group by Telegram group ID
    */
   async findGroupByTelegramId(telegramGroupId: number): Promise<IGroup | null> {

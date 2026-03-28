@@ -1,7 +1,9 @@
 import mongoose from 'mongoose';
 import { BotContext } from 'src/bot/interface/context';
 import { learningMenu } from 'src/bot/menus/learning/learning.menu';
+import { sendVocabularyToGroup } from 'src/bot/utils/send-vocabulary.util';
 import { WeeklyTopicStatus } from 'src/database/models/weekly-topic.model';
+import { groupService } from 'src/database/services/group.service';
 import { weeklyTopicService } from 'src/database/services/weekly-topic.service';
 import logger from 'src/shared/logger/logger';
 
@@ -66,6 +68,17 @@ export class LearningMenuActionHandler {
       await ctx.answerCbQuery('Topic updated successfully!');
 
       logger.info(`Topic ${topicId} updated to: ${selectedTopicName} by user ${ctx.from?.id}`);
+
+      // On Monday, immediately send the first vocabulary word
+      if (isMonday && topic.groupId) {
+        const group = await groupService.findGroupById(topic.groupId);
+        if (group) {
+          logger.info(
+            `[LearningMenu] Monday detected - sending first vocabulary immediately for group ${group.telegramGroupId}`
+          );
+          await sendVocabularyToGroup(group._id, group.telegramGroupId, topicId, selectedTopicName);
+        }
+      }
     } catch (error) {
       logger.error(`Error in selectTopic: ${error}`);
       await ctx.answerCbQuery('Error updating topic');
