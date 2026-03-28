@@ -29,6 +29,12 @@ src
 │   │   └── voice.action-handler.ts    // TTS pronunciation button callbacks
 │   ├── helper
 │   │   └── process-request.helper.ts
+│   ├── jobs                           // scheduled cron jobs
+│   │   ├── daily-evaluation.job.ts    // 9 PM daily evaluation & leaderboard
+│   │   ├── daily-vocabulary.job.ts    // daily vocab broadcast (Tue-Sun)
+│   │   ├── index.ts                   // job queue setup
+│   │   ├── topic-broadcast.job.ts     // Monday 9 AM topic suggestions
+│   │   └── weekly-summary.job.ts      // Sunday weekly summary
 │   ├── index.ts                       // init bot, session, stage, middlewares
 │   ├── interface
 │   │   ├── context.ts                 // BotContext (extends SceneContext)
@@ -49,11 +55,14 @@ src
 │   ├── resources
 │   │   ├── ask-messages.ts            // /ask scene messages
 │   │   ├── learning-messages.ts
+│   │   ├── rate-limit-messages.ts     // rate limit user-facing messages
 │   │   ├── share.resource.ts
 │   │   └── voice-messages.ts          // /voice feature messages
-│   └── scenes
-│       └── ask
-│           └── ask.scene.ts           // /ask conversational scene
+│   ├── scenes
+│   │   └── ask
+│   │       └── ask.scene.ts           // /ask conversational scene
+│   └── utils
+│       └── send-vocabulary.util.ts    // shared vocab generation & sending
 ├── configs
 │   └── configuration.ts
 ├── index.ts                           // main entry point
@@ -67,6 +76,7 @@ src
     │   │   ├── fuse.provider.ts       // Claude via Fuse API
     │   │   └── gemini.provider.ts     // Google Gemini provider
     │   ├── callback-data-storage.service.ts
+    │   ├── rate-limit.service.ts     // rate limiting for AI features
     │   ├── redis.service.ts
     │   ├── session.service.ts
     │   └── telegram-api.service.ts

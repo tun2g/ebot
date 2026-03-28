@@ -2,6 +2,25 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.5] - 2026-03-29
+
+### Added
+
+- **Monday vocabulary delivery**: First vocabulary word is now sent immediately after topic selection on Monday, instead of waiting until Tuesday
+  - Extracted shared `sendVocabularyToGroup()` utility for reuse across cron job and topic selection handlers
+  - Both reply-based and inline button topic selection paths trigger immediate vocabulary on Monday
+- **IPA pronunciation guide for `/voice`**: Voice practice sentences now include IPA (International Phonetic Alphabet) transcription under the sentence
+- **Rate limiting**: Added rate limit service for `/voice` and `/ask` commands to prevent abuse
+- **`SETUP.md`**: Separated setup/installation docs from README into a dedicated file
+- **`findGroupById()`**: New method on `GroupService` for looking up groups by MongoDB ObjectId
+
+### Changed
+
+- **README.md**: Complete rewrite from generic template to business-focused documentation describing the English learning bot features, commands, and architecture
+- **`daily-vocabulary.job.ts`**: Refactored to use shared `sendVocabularyToGroup()` utility, reducing code duplication
+- **`topic-selection.handler.ts`**: Confirmation message now says "shortly" instead of "tomorrow at 9 AM" when topic is selected on Monday
+- **Gemini voice prompt**: Updated to request and return IPA pronunciation alongside the practice sentence
+
 ## [1.0.4] - 2026-03-27
 
 ### Added
